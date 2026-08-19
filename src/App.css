@@ -69,7 +69,16 @@ input:focus { border-color: #4b5563; box-shadow: 0 0 0 3px rgba(75, 85, 99, .14)
 .summary-card strong, .summary-card span { display: block; }
 .summary-card strong { color: #111827; font-size: 24px; }
 .summary-card span { color: #6b7280; font-size: 12px; }
+.filters-card { display: flex; align-items: flex-end; gap: 14px; max-width: 1200px; margin: 0 auto 18px; padding: 16px; box-sizing: border-box; border: 1px solid #e5e7eb; border-radius: 12px; background: #fff; }
+.filter-field { flex: 1; min-width: 0; }
+.filter-field label { margin-bottom: 6px; }
+.filter-field select, .filter-field input { width: 100%; padding: 10px 11px; box-sizing: border-box; border: 1px solid #d1d5db; border-radius: 8px; color: #1f2937; background: #fff; font: inherit; font-size: 14px; }
+.filter-field select:focus, .filter-field input:focus { border-color: #4b5563; outline: none; box-shadow: 0 0 0 3px rgba(75, 85, 99, .14); }
+.clear-filters-button { padding: 10px 12px; border: 0; color: #4b5563; background: transparent; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.clear-filters-button:hover:not(:disabled) { color: #111827; }
+.clear-filters-button:disabled { color: #9ca3af; cursor: not-allowed; }
 .table-card, .state-card { max-width: 1200px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 12px; background: #fff; box-shadow: 0 6px 20px rgba(15, 23, 42, .04); }
+.results-caption { padding: 12px 18px; border-bottom: 1px solid #f0f1f3; color: #6b7280; font-size: 13px; }
 .table-scroll { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; text-align: left; }
 th { padding: 14px 18px; color: #6b7280; background: #f9fafb; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
@@ -116,5 +125,7 @@ td strong { color: #1f2937; font-weight: 600; }
   .admin-content { padding: 28px 16px; }
   .page-header { align-items: flex-start; flex-direction: column; }
   .summary-card { width: 100%; box-sizing: border-box; }
+  .filters-card { align-items: stretch; flex-direction: column; }
+  .clear-filters-button { align-self: flex-start; padding-left: 0; }
   .detail-panel { padding: 28px 20px; }
 }

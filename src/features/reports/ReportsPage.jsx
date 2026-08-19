@@ -99,6 +99,9 @@ function ReportsPage({ userEmail, onSignOut }) {
   const [selectedReport, setSelectedReport] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [fromDate, setFromDate] = useState('')
+  const [toDate, setToDate] = useState('')
 
   const loadReports = useCallback(async () => {
     setLoading(true)
@@ -114,7 +117,21 @@ function ReportsPage({ userEmail, onSignOut }) {
     return () => clearTimeout(timer)
   }, [loadReports])
 
-  const openCount = useMemo(() => reports.filter((report) => report.status === 'open').length, [reports])
+  const filteredReports = useMemo(() => reports.filter((report) => {
+    const reportDate = new Date(report.created_at)
+    const matchesStatus = statusFilter === 'all' || report.status === statusFilter
+    const matchesFrom = !fromDate || reportDate >= new Date(`${fromDate}T00:00:00`)
+    const matchesTo = !toDate || reportDate <= new Date(`${toDate}T23:59:59.999`)
+    return matchesStatus && matchesFrom && matchesTo
+  }), [fromDate, reports, statusFilter, toDate])
+
+  const openCount = useMemo(() => filteredReports.filter((report) => report.status === 'open').length, [filteredReports])
+
+  function clearFilters() {
+    setStatusFilter('all')
+    setFromDate('')
+    setToDate('')
+  }
 
   function handleReportUpdated(updatedReport) {
     setReports((currentReports) => currentReports.map((report) => report.id === updatedReport.id ? updatedReport : report))
@@ -123,11 +140,18 @@ function ReportsPage({ userEmail, onSignOut }) {
 
   return (
     <AdminLayout userEmail={userEmail} onSignOut={onSignOut}>
-      <header className="page-header"><div><p className="eyebrow">Para Admin</p><h1>Reports</h1><p className="page-subtitle">Review feedback submitted by commuters across Metro Manila.</p></div><div className="summary-card"><strong>{openCount}</strong><span>Open reports</span></div></header>
+      <header className="page-header"><div><p className="eyebrow">Para Admin</p><h1>Reports</h1><p className="page-subtitle">Review feedback submitted by commuters across Metro Manila.</p></div><div className="summary-card"><strong>{openCount}</strong><span>Open visible reports</span></div></header>
+      <section className="filters-card" aria-label="Report filters">
+        <div className="filter-field"><label htmlFor="status-filter">Status</label><select id="status-filter" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}><option value="all">All statuses</option>{Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></div>
+        <div className="filter-field"><label htmlFor="from-date">From date</label><input id="from-date" type="date" value={fromDate} max={toDate || undefined} onChange={(event) => setFromDate(event.target.value)} /></div>
+        <div className="filter-field"><label htmlFor="to-date">To date</label><input id="to-date" type="date" value={toDate} min={fromDate || undefined} onChange={(event) => setToDate(event.target.value)} /></div>
+        <button className="clear-filters-button" type="button" onClick={clearFilters} disabled={statusFilter === 'all' && !fromDate && !toDate}>Clear filters</button>
+      </section>
       {loading && <div className="state-card"><p>Loading reports…</p></div>}
       {!loading && error && <div className="state-card error-state"><p>{error}</p><button className="secondary-button compact" type="button" onClick={loadReports}>Try again</button></div>}
       {!loading && !error && reports.length === 0 && <div className="state-card"><h2>No reports yet</h2><p>Reports submitted through the Para app will appear here.</p></div>}
-      {!loading && !error && reports.length > 0 && <div className="table-card"><div className="table-scroll"><table><thead><tr><th>Category</th><th>Description</th><th>Route / trip</th><th>Status</th><th>Submitted</th></tr></thead><tbody>{reports.map((report) => <tr key={report.id} onClick={() => setSelectedReport(report)} tabIndex="0" onKeyDown={(event) => { if (event.key === 'Enter') setSelectedReport(report) }}><td><strong>{categoryLabels[report.category] ?? report.category}</strong></td><td className="description-cell">{report.description}</td><td>{report.route_id || report.trip_id || '—'}</td><td><span className={`status-badge ${report.status}`}>{statusLabels[report.status] ?? report.status}</span></td><td>{formatDate(report.created_at)}</td></tr>)}</tbody></table></div></div>}
+      {!loading && !error && reports.length > 0 && filteredReports.length === 0 && <div className="state-card"><h2>No matching reports</h2><p>Try changing the status or date range.</p></div>}
+      {!loading && !error && filteredReports.length > 0 && <div className="table-card"><div className="results-caption">Showing {filteredReports.length} of {reports.length} reports</div><div className="table-scroll"><table><thead><tr><th>Category</th><th>Description</th><th>Route / trip</th><th>Status</th><th>Submitted</th></tr></thead><tbody>{filteredReports.map((report) => <tr key={report.id} onClick={() => setSelectedReport(report)} tabIndex="0" onKeyDown={(event) => { if (event.key === 'Enter') setSelectedReport(report) }}><td><strong>{categoryLabels[report.category] ?? report.category}</strong></td><td className="description-cell">{report.description}</td><td>{report.route_id || report.trip_id || '—'}</td><td><span className={`status-badge ${report.status}`}>{statusLabels[report.status] ?? report.status}</span></td><td>{formatDate(report.created_at)}</td></tr>)}</tbody></table></div></div>}
       {selectedReport && <ReportDetails key={`${selectedReport.id}-${selectedReport.updated_at}`} report={selectedReport} onClose={() => setSelectedReport(null)} onUpdated={handleReportUpdated} />}
     </AdminLayout>
   )
