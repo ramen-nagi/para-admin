@@ -1,10 +1,4 @@
-function AdminLayout({
-  userEmail,
-  onSignOut,
-  activeTab,
-  onTabChange,
-  children,
-}) {
+function AdminLayout({ userEmail, onSignOut, activeTab, onTabChange, children }) {
   return (
     <div className="admin-shell">
       <aside className="sidebar">
@@ -14,24 +8,34 @@ function AdminLayout({
         </div>
         <nav aria-label="Main navigation">
           <button
-            className={`nav-item ${activeTab === "reports" ? "active" : ""}`}
+            className={`nav-item ${activeTab === 'reports' ? 'active' : ''}`}
             type="button"
             onClick={() => {
-              onTabChange?.("reports");
-              window.location.hash = "reports";
+              onTabChange?.('reports')
+              window.location.hash = 'reports'
             }}
           >
             Reports
           </button>
           <button
-            className={`nav-item ${activeTab === "fares" ? "active" : ""}`}
+            className={`nav-item ${activeTab === 'fares' ? 'active' : ''}`}
             type="button"
             onClick={() => {
-              onTabChange?.("fares");
-              window.location.hash = "fares";
+              onTabChange?.('fares')
+              window.location.hash = 'fares'
             }}
           >
             Fare Matrix
+          </button>
+          <button
+            className={`nav-item ${activeTab === 'train-fares' ? 'active' : ''}`}
+            type="button"
+            onClick={() => {
+              onTabChange?.('train-fares')
+              window.location.hash = 'train-fares'
+            }}
+          >
+            Train Fare
           </button>
         </nav>
         <div className="vehicle-legend" aria-label="Vehicle type legend">
@@ -62,7 +66,7 @@ function AdminLayout({
       </aside>
       <div className="admin-content">{children}</div>
     </div>
-  );
+  )
 }
 
-export default AdminLayout;
+export default AdminLayout

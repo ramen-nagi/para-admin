@@ -1,22 +1,16 @@
-import { useCallback, useEffect, useState } from "react";
-import AdminLayout from "../../layouts/AdminLayout";
-import {
-  createFare,
-  FARE_TYPES,
-  getFareMatrix,
-  updateFare,
-  VEHICLE_TYPES,
-} from "./faresService";
+import { useCallback, useEffect, useState } from 'react'
+import AdminLayout from '../../layouts/AdminLayout'
+import { createFare, FARE_TYPES, getFareMatrix, updateFare, VEHICLE_TYPES } from './faresService'
 
 const emptyForm = {
-  vehicle_type: "1",
-  fare_type: "STANDARD",
-  minimum_distance_meters: "0",
-  minimum_fare: "",
-  increment_distance_meters: "",
-  increment_fare: "",
-  currency: "PHP",
-};
+  vehicle_type: '1',
+  fare_type: 'STANDARD',
+  minimum_distance_meters: '0',
+  minimum_fare: '',
+  increment_distance_meters: '',
+  increment_fare: '',
+  currency: 'PHP',
+}
 
 function FareForm({ fare, onClose, onSaved }) {
   const [form, setForm] = useState(
@@ -30,49 +24,43 @@ function FareForm({ fare, onClose, onSaved }) {
           increment_fare: String(fare.increment_fare),
         }
       : emptyForm,
-  );
-  const [error, setError] = useState("");
-  const [saving, setSaving] = useState(false);
-  const isEditing = Boolean(fare);
+  )
+  const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
+  const isEditing = Boolean(fare)
 
   function updateField(event) {
     setForm((current) => ({
       ...current,
       [event.target.name]: event.target.value,
-    }));
+    }))
   }
 
   async function handleSubmit(event) {
-    event.preventDefault();
-    setError("");
+    event.preventDefault()
+    setError('')
     const numericFields = [
-      "minimum_distance_meters",
-      "minimum_fare",
-      "increment_distance_meters",
-      "increment_fare",
-    ];
-    const values = Object.fromEntries(
-      numericFields.map((field) => [field, Number(form[field])]),
-    );
+      'minimum_distance_meters',
+      'minimum_fare',
+      'increment_distance_meters',
+      'increment_fare',
+    ]
+    const values = Object.fromEntries(numericFields.map((field) => [field, Number(form[field])]))
     if (
       !VEHICLE_TYPES.includes(Number(form.vehicle_type)) ||
       !FARE_TYPES.includes(form.fare_type) ||
       !form.currency.trim() ||
-      numericFields.some(
-        (field) => form[field] === "" || !Number.isFinite(values[field]),
-      )
+      numericFields.some((field) => form[field] === '' || !Number.isFinite(values[field]))
     )
-      return setError("Complete all fields with valid values.");
+      return setError('Complete all fields with valid values.')
     if (
       values.minimum_distance_meters < 0 ||
       values.increment_distance_meters <= 0 ||
       values.minimum_fare < 0 ||
       values.increment_fare < 0
     )
-      return setError(
-        "Distances and fares must meet the minimum allowed values.",
-      );
-    setSaving(true);
+      return setError('Distances and fares must meet the minimum allowed values.')
+    setSaving(true)
     const payload = {
       vehicle_type: Number(form.vehicle_type),
       fare_type: form.fare_type,
@@ -81,18 +69,16 @@ function FareForm({ fare, onClose, onSaved }) {
       increment_distance_meters: values.increment_distance_meters,
       increment_fare: values.increment_fare,
       currency: form.currency.trim(),
-    };
-    const result = isEditing
-      ? await updateFare(fare.fare_id, payload)
-      : await createFare(payload);
+    }
+    const result = isEditing ? await updateFare(fare.fare_id, payload) : await createFare(payload)
     if (result.error)
       setError(
-        result.error.code === "23505"
-          ? "A fare for this vehicle and fare type already exists."
-          : "The fare could not be saved. Check your permissions and try again.",
-      );
-    else onSaved(result.fare);
-    setSaving(false);
+        result.error.code === '23505'
+          ? 'A fare for this vehicle and fare type already exists.'
+          : 'The fare could not be saved. Check your permissions and try again.',
+      )
+    else onSaved(result.fare)
+    setSaving(false)
   }
 
   return (
@@ -107,14 +93,9 @@ function FareForm({ fare, onClose, onSaved }) {
         <div className="detail-header">
           <div>
             <p className="eyebrow">Fare matrix</p>
-            <h2 id="fare-form-title">{isEditing ? "Edit fare" : "Add fare"}</h2>
+            <h2 id="fare-form-title">{isEditing ? 'Edit fare' : 'Add fare'}</h2>
           </div>
-          <button
-            className="close-button"
-            type="button"
-            aria-label="Close form"
-            onClick={onClose}
-          >
+          <button className="close-button" type="button" aria-label="Close form" onClick={onClose}>
             ×
           </button>
         </div>
@@ -137,12 +118,7 @@ function FareForm({ fare, onClose, onSaved }) {
             </div>
             <div className="edit-field">
               <label htmlFor="fare_type">Fare type</label>
-              <select
-                id="fare_type"
-                name="fare_type"
-                value={form.fare_type}
-                onChange={updateField}
-              >
+              <select id="fare_type" name="fare_type" value={form.fare_type} onChange={updateField}>
                 {FARE_TYPES.map((type) => (
                   <option key={type} value={type}>
                     {type}
@@ -151,9 +127,7 @@ function FareForm({ fare, onClose, onSaved }) {
               </select>
             </div>
             <div className="edit-field">
-              <label htmlFor="minimum_distance_meters">
-                Minimum distance (m)
-              </label>
+              <label htmlFor="minimum_distance_meters">Minimum distance (m)</label>
               <input
                 id="minimum_distance_meters"
                 name="minimum_distance_meters"
@@ -177,9 +151,7 @@ function FareForm({ fare, onClose, onSaved }) {
               />
             </div>
             <div className="edit-field">
-              <label htmlFor="increment_distance_meters">
-                Increment distance (m)
-              </label>
+              <label htmlFor="increment_distance_meters">Increment distance (m)</label>
               <input
                 id="increment_distance_meters"
                 name="increment_distance_meters"
@@ -219,63 +191,51 @@ function FareForm({ fare, onClose, onSaved }) {
             </p>
           )}
           <div className="form-actions">
-            <button
-              className="secondary-button compact"
-              type="button"
-              onClick={onClose}
-            >
+            <button className="secondary-button compact" type="button" onClick={onClose}>
               Cancel
             </button>
-            <button
-              className="primary-button compact"
-              type="submit"
-              disabled={saving}
-            >
-              {saving ? "Saving…" : "Save fare"}
+            <button className="primary-button compact" type="submit" disabled={saving}>
+              {saving ? 'Saving…' : 'Save fare'}
             </button>
           </div>
         </form>
       </section>
     </div>
-  );
+  )
 }
 
 function FareMatrixPage({ userEmail, onSignOut, onTabChange }) {
-  const [fares, setFares] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [editingFare, setEditingFare] = useState(null);
-  const [formOpen, setFormOpen] = useState(false);
-  void onTabChange;
+  const [fares, setFares] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [editingFare, setEditingFare] = useState(null)
+  const [formOpen, setFormOpen] = useState(false)
+  void onTabChange
 
   const loadFares = useCallback(async () => {
-    setLoading(true);
-    setError("");
-    const result = await getFareMatrix();
+    setLoading(true)
+    setError('')
+    const result = await getFareMatrix()
     if (result.error)
-      setError(
-        "Fare information could not be loaded. Check your connection and permissions.",
-      );
-    else setFares(result.fares);
-    setLoading(false);
-  }, []);
+      setError('Fare information could not be loaded. Check your connection and permissions.')
+    else setFares(result.fares)
+    setLoading(false)
+  }, [])
   useEffect(() => {
-    const timer = setTimeout(loadFares, 0);
-    return () => clearTimeout(timer);
-  }, [loadFares]);
+    const timer = setTimeout(loadFares, 0)
+    return () => clearTimeout(timer)
+  }, [loadFares])
   function handleSaved(fare) {
     setFares((current) => {
-      const exists = current.some((item) => item.fare_id === fare.fare_id);
+      const exists = current.some((item) => item.fare_id === fare.fare_id)
       return exists
         ? current.map((item) => (item.fare_id === fare.fare_id ? fare : item))
         : [...current, fare].sort(
-            (a, b) =>
-              a.vehicle_type - b.vehicle_type ||
-              a.fare_type.localeCompare(b.fare_type),
-          );
-    });
-    setFormOpen(false);
-    setEditingFare(null);
+            (a, b) => a.vehicle_type - b.vehicle_type || a.fare_type.localeCompare(b.fare_type),
+          )
+    })
+    setFormOpen(false)
+    setEditingFare(null)
   }
 
   return (
@@ -284,16 +244,14 @@ function FareMatrixPage({ userEmail, onSignOut, onTabChange }) {
         <div>
           <p className="eyebrow">Para Admin</p>
           <h1>Fare Matrix</h1>
-          <p className="page-subtitle">
-            Manage fare information used by the Para app.
-          </p>
+          <p className="page-subtitle">Manage fare information used by the Para app.</p>
         </div>
         <button
           className="primary-button add-button"
           type="button"
           onClick={() => {
-            setEditingFare(null);
-            setFormOpen(true);
+            setEditingFare(null)
+            setFormOpen(true)
           }}
         >
           Add fare
@@ -307,11 +265,7 @@ function FareMatrixPage({ userEmail, onSignOut, onTabChange }) {
       {!loading && error && (
         <div className="state-card error-state">
           <p>{error}</p>
-          <button
-            className="secondary-button compact"
-            type="button"
-            onClick={loadFares}
-          >
+          <button className="secondary-button compact" type="button" onClick={loadFares}>
             Try again
           </button>
         </div>
@@ -359,8 +313,8 @@ function FareMatrixPage({ userEmail, onSignOut, onTabChange }) {
                         className="table-action"
                         type="button"
                         onClick={() => {
-                          setEditingFare(fare);
-                          setFormOpen(true);
+                          setEditingFare(fare)
+                          setFormOpen(true)
                         }}
                       >
                         Edit
@@ -377,14 +331,14 @@ function FareMatrixPage({ userEmail, onSignOut, onTabChange }) {
         <FareForm
           fare={editingFare}
           onClose={() => {
-            setFormOpen(false);
-            setEditingFare(null);
+            setFormOpen(false)
+            setEditingFare(null)
           }}
           onSaved={handleSaved}
         />
       )}
     </AdminLayout>
-  );
+  )
 }
 
-export default FareMatrixPage;
+export default FareMatrixPage

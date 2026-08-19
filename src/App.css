@@ -36,7 +36,7 @@
   color: #6b7280;
   font-size: 13px;
   font-weight: 700;
-  letter-spacing: .08em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
@@ -45,7 +45,7 @@ h1 {
   color: #111827;
   font-size: 32px;
   line-height: 1.15;
-  letter-spacing: -.03em;
+  letter-spacing: -0.03em;
 }
 
 .subtitle,
@@ -82,7 +82,7 @@ input {
 
 input:focus {
   border-color: #4b5563;
-  box-shadow: 0 0 0 3px rgba(75, 85, 99, .14);
+  box-shadow: 0 0 0 3px rgba(75, 85, 99, 0.14);
 }
 
 .error-message {
@@ -113,7 +113,7 @@ input:focus {
 }
 
 .primary-button:disabled {
-  opacity: .6;
+  opacity: 0.6;
   cursor: wait;
 }
 
@@ -329,7 +329,7 @@ input:focus {
 .filter-field input:focus {
   border-color: #4b5563;
   outline: none;
-  box-shadow: 0 0 0 3px rgba(75, 85, 99, .14);
+  box-shadow: 0 0 0 3px rgba(75, 85, 99, 0.14);
 }
 
 .clear-filters-button {
@@ -406,7 +406,7 @@ input:focus {
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   background: #fff;
-  box-shadow: 0 6px 20px rgba(15, 23, 42, .04);
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.04);
 }
 
 .results-caption {
@@ -432,7 +432,7 @@ th {
   background: #f9fafb;
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: .04em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   white-space: nowrap;
 }
@@ -531,7 +531,7 @@ td strong {
   z-index: 2;
   display: flex;
   justify-content: flex-end;
-  background: rgba(17, 24, 39, .42);
+  background: rgba(17, 24, 39, 0.42);
 }
 
 .detail-panel {
@@ -541,7 +541,7 @@ td strong {
   padding: 36px;
   box-sizing: border-box;
   background: #fff;
-  box-shadow: -10px 0 30px rgba(15, 23, 42, .15);
+  box-shadow: -10px 0 30px rgba(15, 23, 42, 0.15);
 }
 
 .detail-header {
@@ -587,7 +587,7 @@ td strong {
   color: #374151;
   font-size: 13px;
   text-transform: uppercase;
-  letter-spacing: .04em;
+  letter-spacing: 0.04em;
 }
 
 .report-description {
@@ -643,7 +643,7 @@ td strong {
 .edit-field select:focus,
 .edit-field textarea:focus {
   border-color: #4b5563;
-  box-shadow: 0 0 0 3px rgba(75, 85, 99, .14);
+  box-shadow: 0 0 0 3px rgba(75, 85, 99, 0.14);
 }
 
 .edit-field textarea {
@@ -714,4 +714,42 @@ td strong {
   .form-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.train-fare-filters {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  max-width: 1200px;
+  margin: 0 auto 18px;
+  padding: 16px;
+  box-sizing: border-box;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+}
+.train-fare-filters .filter-field {
+  flex: 1;
+}
+.train-fare-filters .primary-button {
+  width: auto;
+  white-space: nowrap;
+}
+.train-fare-message {
+  max-width: 1200px;
+  margin: 0 auto 16px;
+}
+.table-fare-input {
+  width: 130px;
+  padding: 8px 10px;
+  box-sizing: border-box;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  font: inherit;
+}
+.batch-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px 18px;
+  border-top: 1px solid #f0f1f3;
 }

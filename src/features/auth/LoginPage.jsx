@@ -1,65 +1,61 @@
-import { useEffect, useState } from "react";
-import AuthLayout from "../../layouts/AuthLayout";
-import {
-  getCurrentSession,
-  signInAsAdmin,
-  subscribeToAuthChanges,
-} from "./authService";
+import { useEffect, useState } from 'react'
+import AuthLayout from '../../layouts/AuthLayout'
+import { getCurrentSession, signInAsAdmin, subscribeToAuthChanges } from './authService'
 
 function LoginPage({ onSignedIn }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    let mounted = true;
+    let mounted = true
 
     getCurrentSession().then(() => {
       if (mounted) {
-        setLoading(false);
+        setLoading(false)
       }
-    });
+    })
 
     const unsubscribe = subscribeToAuthChanges((currentSession) => {
       if (currentSession) {
-        console.info("[Para Admin] Signed in:", currentSession.user.email);
+        console.info('[Para Admin] Signed in:', currentSession.user.email)
       }
-      if (currentSession) onSignedIn(currentSession);
-    });
+      if (currentSession) onSignedIn(currentSession)
+    })
 
     return () => {
-      mounted = false;
-      unsubscribe();
-    };
-  }, [onSignedIn]);
+      mounted = false
+      unsubscribe()
+    }
+  }, [onSignedIn])
 
   async function handleSubmit(event) {
-    event.preventDefault();
-    setError("");
+    event.preventDefault()
+    setError('')
 
     if (!email.trim() || !password) {
-      setError("Enter your email and password to continue.");
-      return;
+      setError('Enter your email and password to continue.')
+      return
     }
 
-    setSubmitting(true);
+    setSubmitting(true)
     const {
       session: authenticatedSession,
       error: signInError,
       isAdmin,
-    } = await signInAsAdmin(email.trim(), password);
+    } = await signInAsAdmin(email.trim(), password)
 
     if (signInError) {
-      setError("Unable to sign in with those credentials.");
+      setError('Unable to sign in with those credentials.')
     } else if (!isAdmin) {
-      setError("This account does not have administrator access.");
+      setError('This account does not have administrator access.')
     } else {
-      onSignedIn(authenticatedSession);
+      onSignedIn(authenticatedSession)
     }
 
-    setSubmitting(false);
+    setSubmitting(false)
   }
 
   if (loading) {
@@ -67,7 +63,7 @@ function LoginPage({ onSignedIn }) {
       <AuthLayout>
         <p className="loading">Loading…</p>
       </AuthLayout>
-    );
+    )
   }
 
   return (
@@ -78,9 +74,7 @@ function LoginPage({ onSignedIn }) {
         </div>
         <p className="eyebrow">Para Admin</p>
         <h1 id="signin-title">Welcome back</h1>
-        <p className="subtitle">
-          Sign in to manage your administrator workspace.
-        </p>
+        <p className="subtitle">Sign in to manage your administrator workspace.</p>
         <form onSubmit={handleSubmit} noValidate>
           <div className="field-group">
             <label htmlFor="email">Email address</label>
@@ -113,17 +107,13 @@ function LoginPage({ onSignedIn }) {
               {error}
             </p>
           )}
-          <button
-            className="primary-button"
-            type="submit"
-            disabled={submitting}
-          >
-            {submitting ? "Signing in…" : "Sign in"}
+          <button className="primary-button" type="submit" disabled={submitting}>
+            {submitting ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
       </section>
     </AuthLayout>
-  );
+  )
 }
 
-export default LoginPage;
+export default LoginPage

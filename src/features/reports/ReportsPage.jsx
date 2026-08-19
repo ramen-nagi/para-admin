@@ -1,68 +1,68 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import AdminLayout from "../../layouts/AdminLayout";
-import { getReports, updateReport } from "./reportsService";
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import AdminLayout from '../../layouts/AdminLayout'
+import { getReports, updateReport } from './reportsService'
 
 const categoryLabels = {
-  route_nonexistent: "Route does not exist",
-  incorrect_route_path: "Incorrect route path",
-  wrong_plotted_stop: "Wrong plotted stop",
-  fare_discrepancy: "Fare discrepancy",
-  app_bug_report: "App bug report",
-  others: "Others",
-};
+  route_nonexistent: 'Route does not exist',
+  incorrect_route_path: 'Incorrect route path',
+  wrong_plotted_stop: 'Wrong plotted stop',
+  fare_discrepancy: 'Fare discrepancy',
+  app_bug_report: 'App bug report',
+  others: 'Others',
+}
 
 const statusLabels = {
-  open: "Open",
-  under_review: "Under review",
-  resolved: "Resolved",
-  rejected: "Rejected",
-  duplicate: "Duplicate",
-};
+  open: 'Open',
+  under_review: 'Under review',
+  resolved: 'Resolved',
+  rejected: 'Rejected',
+  duplicate: 'Duplicate',
+}
 
 function formatDate(value) {
-  if (!value) return "—";
-  return new Intl.DateTimeFormat("en-PH", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
+  if (!value) return '—'
+  return new Intl.DateTimeFormat('en-PH', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(new Date(value))
 }
 
 function formatFare(value) {
-  return value == null ? "—" : `₱${Number(value).toFixed(2)}`;
+  return value == null ? '—' : `₱${Number(value).toFixed(2)}`
 }
 
 function ReportDetails({ report, onClose, onUpdated }) {
-  const [status, setStatus] = useState(report.status);
-  const [adminNotes, setAdminNotes] = useState(report.admin_notes ?? "");
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState("");
-  const [saved, setSaved] = useState(false);
+  const [status, setStatus] = useState(report.status)
+  const [adminNotes, setAdminNotes] = useState(report.admin_notes ?? '')
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
+  const [saved, setSaved] = useState(false)
 
   async function handleSave(event) {
-    event.preventDefault();
-    setSaving(true);
-    setSaveError("");
-    setSaved(false);
+    event.preventDefault()
+    setSaving(true)
+    setSaveError('')
+    setSaved(false)
 
     const resolvedAt =
-      status === "resolved"
-        ? report.status === "resolved" && report.resolved_at
+      status === 'resolved'
+        ? report.status === 'resolved' && report.resolved_at
           ? report.resolved_at
           : new Date().toISOString()
-        : null;
+        : null
     const result = await updateReport(report.id, {
       status,
       adminNotes,
       resolvedAt,
-    });
+    })
 
     if (result.error) {
-      setSaveError("The report could not be updated. Please try again.");
+      setSaveError('The report could not be updated. Please try again.')
     } else {
-      onUpdated(result.report);
-      setSaved(true);
+      onUpdated(result.report)
+      setSaved(true)
     }
-    setSaving(false);
+    setSaving(false)
   }
 
   return (
@@ -77,9 +77,7 @@ function ReportDetails({ report, onClose, onUpdated }) {
         <div className="detail-header">
           <div>
             <p className="eyebrow">Report details</p>
-            <h2 id="report-detail-title">
-              {categoryLabels[report.category] ?? report.category}
-            </h2>
+            <h2 id="report-detail-title">{categoryLabels[report.category] ?? report.category}</h2>
           </div>
           <button
             className="close-button"
@@ -109,22 +107,10 @@ function ReportDetails({ report, onClose, onUpdated }) {
           <DetailField label="Platform" value={report.platform} />
           <DetailField label="App version" value={report.app_version} />
           <DetailField label="Reporter ID" value={report.reporter_id} />
-          <DetailField
-            label="Expected fare"
-            value={formatFare(report.expected_fare)}
-          />
-          <DetailField
-            label="Observed fare"
-            value={formatFare(report.observed_fare)}
-          />
-          <DetailField
-            label="Last updated"
-            value={formatDate(report.updated_at)}
-          />
-          <DetailField
-            label="Resolved at"
-            value={formatDate(report.resolved_at)}
-          />
+          <DetailField label="Expected fare" value={formatFare(report.expected_fare)} />
+          <DetailField label="Observed fare" value={formatFare(report.observed_fare)} />
+          <DetailField label="Last updated" value={formatDate(report.updated_at)} />
+          <DetailField label="Resolved at" value={formatDate(report.resolved_at)} />
         </div>
         <form className="edit-section" onSubmit={handleSave}>
           <div className="edit-field">
@@ -162,82 +148,75 @@ function ReportDetails({ report, onClose, onUpdated }) {
             </p>
           )}
           <button className="primary-button" type="submit" disabled={saving}>
-            {saving ? "Saving…" : "Save changes"}
+            {saving ? 'Saving…' : 'Save changes'}
           </button>
         </form>
       </section>
     </div>
-  );
+  )
 }
 
 function DetailField({ label, value }) {
   return (
     <div className="detail-field">
       <dt>{label}</dt>
-      <dd>{value || "—"}</dd>
+      <dd>{value || '—'}</dd>
     </div>
-  );
+  )
 }
 
 function ReportsPage({ userEmail, onSignOut, onTabChange }) {
-  const [reports, setReports] = useState([]);
-  const [selectedReport, setSelectedReport] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
+  const [reports, setReports] = useState([])
+  const [selectedReport, setSelectedReport] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [fromDate, setFromDate] = useState('')
+  const [toDate, setToDate] = useState('')
 
   const loadReports = useCallback(async () => {
-    setLoading(true);
-    setError("");
-    const result = await getReports();
+    setLoading(true)
+    setError('')
+    const result = await getReports()
     if (result.error)
-      setError(
-        "Reports could not be loaded. Check your connection and permissions.",
-      );
-    else setReports(result.reports);
-    setLoading(false);
-  }, []);
+      setError('Reports could not be loaded. Check your connection and permissions.')
+    else setReports(result.reports)
+    setLoading(false)
+  }, [])
 
   useEffect(() => {
-    const timer = setTimeout(loadReports, 0);
-    return () => clearTimeout(timer);
-  }, [loadReports]);
+    const timer = setTimeout(loadReports, 0)
+    return () => clearTimeout(timer)
+  }, [loadReports])
 
   const filteredReports = useMemo(
     () =>
       reports.filter((report) => {
-        const reportDate = new Date(report.created_at);
-        const matchesStatus =
-          statusFilter === "all" || report.status === statusFilter;
-        const matchesFrom =
-          !fromDate || reportDate >= new Date(`${fromDate}T00:00:00`);
-        const matchesTo =
-          !toDate || reportDate <= new Date(`${toDate}T23:59:59.999`);
-        return matchesStatus && matchesFrom && matchesTo;
+        const reportDate = new Date(report.created_at)
+        const matchesStatus = statusFilter === 'all' || report.status === statusFilter
+        const matchesFrom = !fromDate || reportDate >= new Date(`${fromDate}T00:00:00`)
+        const matchesTo = !toDate || reportDate <= new Date(`${toDate}T23:59:59.999`)
+        return matchesStatus && matchesFrom && matchesTo
       }),
     [fromDate, reports, statusFilter, toDate],
-  );
+  )
 
   const openCount = useMemo(
-    () => filteredReports.filter((report) => report.status === "open").length,
+    () => filteredReports.filter((report) => report.status === 'open').length,
     [filteredReports],
-  );
+  )
 
   function clearFilters() {
-    setStatusFilter("all");
-    setFromDate("");
-    setToDate("");
+    setStatusFilter('all')
+    setFromDate('')
+    setToDate('')
   }
 
   function handleReportUpdated(updatedReport) {
     setReports((currentReports) =>
-      currentReports.map((report) =>
-        report.id === updatedReport.id ? updatedReport : report,
-      ),
-    );
-    setSelectedReport(updatedReport);
+      currentReports.map((report) => (report.id === updatedReport.id ? updatedReport : report)),
+    )
+    setSelectedReport(updatedReport)
   }
 
   return (
@@ -300,7 +279,7 @@ function ReportsPage({ userEmail, onSignOut, onTabChange }) {
           className="clear-filters-button"
           type="button"
           onClick={clearFilters}
-          disabled={statusFilter === "all" && !fromDate && !toDate}
+          disabled={statusFilter === 'all' && !fromDate && !toDate}
         >
           Clear filters
         </button>
@@ -313,11 +292,7 @@ function ReportsPage({ userEmail, onSignOut, onTabChange }) {
       {!loading && error && (
         <div className="state-card error-state">
           <p>{error}</p>
-          <button
-            className="secondary-button compact"
-            type="button"
-            onClick={loadReports}
-          >
+          <button className="secondary-button compact" type="button" onClick={loadReports}>
             Try again
           </button>
         </div>
@@ -328,15 +303,12 @@ function ReportsPage({ userEmail, onSignOut, onTabChange }) {
           <p>Reports submitted through the Para app will appear here.</p>
         </div>
       )}
-      {!loading &&
-        !error &&
-        reports.length > 0 &&
-        filteredReports.length === 0 && (
-          <div className="state-card">
-            <h2>No matching reports</h2>
-            <p>Try changing the status or date range.</p>
-          </div>
-        )}
+      {!loading && !error && reports.length > 0 && filteredReports.length === 0 && (
+        <div className="state-card">
+          <h2>No matching reports</h2>
+          <p>Try changing the status or date range.</p>
+        </div>
+      )}
       {!loading && !error && filteredReports.length > 0 && (
         <div className="table-card">
           <div className="results-caption">
@@ -360,16 +332,14 @@ function ReportsPage({ userEmail, onSignOut, onTabChange }) {
                     onClick={() => setSelectedReport(report)}
                     tabIndex="0"
                     onKeyDown={(event) => {
-                      if (event.key === "Enter") setSelectedReport(report);
+                      if (event.key === 'Enter') setSelectedReport(report)
                     }}
                   >
                     <td>
-                      <strong>
-                        {categoryLabels[report.category] ?? report.category}
-                      </strong>
+                      <strong>{categoryLabels[report.category] ?? report.category}</strong>
                     </td>
                     <td className="description-cell">{report.description}</td>
-                    <td>{report.route_id || report.trip_id || "—"}</td>
+                    <td>{report.route_id || report.trip_id || '—'}</td>
                     <td>
                       <span className={`status-badge ${report.status}`}>
                         {statusLabels[report.status] ?? report.status}
@@ -392,7 +362,7 @@ function ReportsPage({ userEmail, onSignOut, onTabChange }) {
         />
       )}
     </AdminLayout>
-  );
+  )
 }
 
-export default ReportsPage;
+export default ReportsPage

@@ -6,9 +6,9 @@ export async function getCurrentSession() {
 }
 
 export function subscribeToAuthChanges(callback) {
-  const { data: { subscription } } = supabase.auth.onAuthStateChange(
-    (_event, session) => callback(session),
-  )
+  const {
+    data: { subscription },
+  } = supabase.auth.onAuthStateChange((_event, session) => callback(session))
 
   return () => subscription.unsubscribe()
 }
