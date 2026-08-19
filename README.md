@@ -1,4 +1,21 @@
-# React + Vite
+# Para Admin
+
+## Local setup
+
+Create a `.env.local` file with the Supabase project URL and anon key:
+
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
+```
+
+The sign-in flow uses Supabase email/password authentication and checks the authenticated user against `public.admin_users`. Configure Row Level Security or a secure database function so this membership check is allowed for the client.
+
+Run the app with:
+
+```bash
+npm run dev
+```
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
