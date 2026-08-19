@@ -55,7 +55,7 @@ input:focus { border-color: #4b5563; box-shadow: 0 0 0 3px rgba(75, 85, 99, .14)
 .sidebar { width: 232px; display: flex; flex-direction: column; padding: 24px 16px; box-sizing: border-box; background: #111827; color: #fff; }
 .sidebar-brand { display: flex; align-items: center; gap: 10px; margin: 0 8px 48px; font-weight: 700; }
 .brand-mark.small { width: 30px; height: 30px; margin: 0; border-radius: 8px; color: #111827; background: #fff; font-size: 16px; }
-.nav-item { display: block; padding: 11px 12px; border-radius: 7px; color: #d1d5db; text-decoration: none; font-size: 14px; font-weight: 600; }
+.nav-item { display: block; width: 100%; padding: 11px 12px; border: 0; border-radius: 7px; color: #d1d5db; background: #1f2937; text-align: left; text-decoration: none; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
 .nav-item.active, .nav-item:hover { color: #fff; background: #374151; }
 .vehicle-legend { display: flex; flex-wrap: wrap; gap: 8px 14px; margin: 18px 8px 0; color: #9ca3af; font-size: 12px; }
 .sidebar .vehicle-legend { display: grid; gap: 6px; margin-top: 18px; }
@@ -80,7 +80,6 @@ input:focus { border-color: #4b5563; box-shadow: 0 0 0 3px rgba(75, 85, 99, .14)
 .clear-filters-button { padding: 10px 12px; border: 0; color: #4b5563; background: transparent; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
 .clear-filters-button:hover:not(:disabled) { color: #111827; }
 .clear-filters-button:disabled { color: #9ca3af; cursor: not-allowed; }
-.nav-item { width: 100%; border: 0; text-align: left; cursor: pointer; font: inherit; }
 .add-button { width: auto; }
 .table-action { padding: 6px 10px; border: 0; border-radius: 6px; color: #1f2937; background: #eef0f3; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
 .table-action:hover { background: #e5e7eb; }
