@@ -1,4 +1,6 @@
 function AdminLayout({ userEmail, onSignOut, activeTab, onTabChange, children }) {
+  const gtfsEditorUrl = import.meta.env.VITE_GTFS_EDITOR_URL || 'http://localhost:5174'
+
   return (
     <div className="admin-shell">
       <aside className="sidebar">
@@ -37,6 +39,9 @@ function AdminLayout({ userEmail, onSignOut, activeTab, onTabChange, children })
           >
             Train Fare
           </button>
+          <a className="nav-item" href={gtfsEditorUrl}>
+            GTFS Editor
+          </a>
         </nav>
         <div className="vehicle-legend" aria-label="Vehicle type legend">
           <span>
