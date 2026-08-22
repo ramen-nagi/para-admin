@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import TableFilters from '../../components/TableFilters'
+import useTableFilters from '../../hooks/useTableFilters'
 import AdminLayout from '../../layouts/AdminLayout'
 import { getReports, updateReport } from './reportsService'
 
@@ -170,10 +172,6 @@ function ReportsPage({ userEmail, onSignOut, onTabChange }) {
   const [selectedReport, setSelectedReport] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [fromDate, setFromDate] = useState('')
-  const [toDate, setToDate] = useState('')
-
   const loadReports = useCallback(async () => {
     setLoading(true)
     setError('')
@@ -189,28 +187,22 @@ function ReportsPage({ userEmail, onSignOut, onTabChange }) {
     return () => clearTimeout(timer)
   }, [loadReports])
 
-  const filteredReports = useMemo(
-    () =>
-      reports.filter((report) => {
-        const reportDate = new Date(report.created_at)
-        const matchesStatus = statusFilter === 'all' || report.status === statusFilter
-        const matchesFrom = !fromDate || reportDate >= new Date(`${fromDate}T00:00:00`)
-        const matchesTo = !toDate || reportDate <= new Date(`${toDate}T23:59:59.999`)
-        return matchesStatus && matchesFrom && matchesTo
-      }),
-    [fromDate, reports, statusFilter, toDate],
-  )
+  const {
+    statusFilter,
+    setStatusFilter,
+    fromDate,
+    setFromDate,
+    toDate,
+    setToDate,
+    filteredRows: filteredReports,
+    clearFilters,
+    hasActiveFilters,
+  } = useTableFilters(reports)
 
   const openCount = useMemo(
     () => filteredReports.filter((report) => report.status === 'open').length,
     [filteredReports],
   )
-
-  function clearFilters() {
-    setStatusFilter('all')
-    setFromDate('')
-    setToDate('')
-  }
 
   function handleReportUpdated(updatedReport) {
     setReports((currentReports) =>
@@ -239,51 +231,21 @@ function ReportsPage({ userEmail, onSignOut, onTabChange }) {
           <span>Open visible reports</span>
         </div>
       </header>
-      <section className="filters-card" aria-label="Report filters">
-        <div className="filter-field">
-          <label htmlFor="status-filter">Status</label>
-          <select
-            id="status-filter"
-            value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value)}
-          >
-            <option value="all">All statuses</option>
-            {Object.entries(statusLabels).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="filter-field">
-          <label htmlFor="from-date">From date</label>
-          <input
-            id="from-date"
-            type="date"
-            value={fromDate}
-            max={toDate || undefined}
-            onChange={(event) => setFromDate(event.target.value)}
-          />
-        </div>
-        <div className="filter-field">
-          <label htmlFor="to-date">To date</label>
-          <input
-            id="to-date"
-            type="date"
-            value={toDate}
-            min={fromDate || undefined}
-            onChange={(event) => setToDate(event.target.value)}
-          />
-        </div>
-        <button
-          className="clear-filters-button"
-          type="button"
-          onClick={clearFilters}
-          disabled={statusFilter === 'all' && !fromDate && !toDate}
-        >
-          Clear filters
-        </button>
-      </section>
+      <TableFilters
+        ariaLabel="Report filters"
+        statusOptions={[
+          { value: 'all', label: 'All statuses' },
+          ...Object.entries(statusLabels).map(([value, label]) => ({ value, label })),
+        ]}
+        statusValue={statusFilter}
+        onStatusChange={setStatusFilter}
+        fromDate={fromDate}
+        onFromDateChange={setFromDate}
+        toDate={toDate}
+        onToDateChange={setToDate}
+        onClear={clearFilters}
+        hasActiveFilters={hasActiveFilters}
+      />
       {loading && (
         <div className="state-card">
           <p>Loading reports…</p>

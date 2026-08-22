@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
+import TableFilters from '../../components/TableFilters'
+import useTableFilters from '../../hooks/useTableFilters'
 import AdminLayout from '../../layouts/AdminLayout'
 import {
   getRouteSuggestions,
@@ -146,6 +148,22 @@ function RouteSuggestionsPage({ userEmail, onSignOut, onTabChange }) {
   const [selectedSuggestion, setSelectedSuggestion] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const {
+    statusFilter,
+    setStatusFilter,
+    fromDate,
+    setFromDate,
+    toDate,
+    setToDate,
+    filteredRows: filteredSuggestions,
+    clearFilters,
+    hasActiveFilters,
+  } = useTableFilters(suggestions)
+
+  const statusOptions = [
+    { value: 'all', label: 'All statuses' },
+    ...Object.entries(SUGGESTION_STATUSES).map(([value, label]) => ({ value, label })),
+  ]
 
   const loadSuggestions = useCallback(async () => {
     setLoading(true)
@@ -185,6 +203,18 @@ function RouteSuggestionsPage({ userEmail, onSignOut, onTabChange }) {
           <p className="page-subtitle">Review routes suggested by commuters.</p>
         </div>
       </header>
+      <TableFilters
+        ariaLabel="Route suggestion filters"
+        statusOptions={statusOptions}
+        statusValue={statusFilter}
+        onStatusChange={setStatusFilter}
+        fromDate={fromDate}
+        onFromDateChange={setFromDate}
+        toDate={toDate}
+        onToDateChange={setToDate}
+        onClear={clearFilters}
+        hasActiveFilters={hasActiveFilters}
+      />
       {loading && (
         <div className="state-card">
           <p>Loading route suggestions…</p>
@@ -204,8 +234,17 @@ function RouteSuggestionsPage({ userEmail, onSignOut, onTabChange }) {
           <p>Suggestions submitted through the Para app will appear here.</p>
         </div>
       )}
-      {!loading && !error && suggestions.length > 0 && (
+      {!loading && !error && suggestions.length > 0 && filteredSuggestions.length === 0 && (
+        <div className="state-card">
+          <h2>No matching route suggestions</h2>
+          <p>Try changing the status or date range.</p>
+        </div>
+      )}
+      {!loading && !error && filteredSuggestions.length > 0 && (
         <div className="table-card">
+          <div className="results-caption">
+            Showing {filteredSuggestions.length} of {suggestions.length} route suggestions
+          </div>
           <div className="table-scroll">
             <table>
               <thead>
@@ -219,7 +258,7 @@ function RouteSuggestionsPage({ userEmail, onSignOut, onTabChange }) {
                 </tr>
               </thead>
               <tbody>
-                {suggestions.map((suggestion) => (
+                {filteredSuggestions.map((suggestion) => (
                   <tr
                     key={suggestion.id}
                     tabIndex="0"
