@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import DataTable from '../../components/DataTable'
 import PageHeader from '../../components/PageHeader'
 import AdminLayout from '../../layouts/AdminLayout'
 import {
@@ -173,6 +174,53 @@ function TrainFarePage({ userEmail, onSignOut, onTabChange }) {
     setSaving(false)
   }
 
+  const trainFareColumns = [
+    {
+      key: 'origin',
+      label: 'Origin',
+      render: () => stationLabel(stopMap.get(originStopId)),
+    },
+    {
+      key: 'destination',
+      label: 'Destination',
+      render: (destinationStopId) => stationLabel(stopMap.get(destinationStopId)),
+    },
+    {
+      key: 'standard',
+      label: 'STANDARD',
+      render: (destinationStopId) => (
+        <input
+          className="table-fare-input"
+          type="number"
+          min="0"
+          step="1"
+          value={standardValues[destinationStopId] ?? ''}
+          onChange={(event) =>
+            updateValue(setStandardValues, destinationStopId, event.target.value)
+          }
+          placeholder="Enter fare"
+        />
+      ),
+    },
+    {
+      key: 'discounted',
+      label: 'DISCOUNTED',
+      render: (destinationStopId) => (
+        <input
+          className="table-fare-input"
+          type="number"
+          min="0"
+          step="1"
+          value={discountedValues[destinationStopId] ?? ''}
+          onChange={(event) =>
+            updateValue(setDiscountedValues, destinationStopId, event.target.value)
+          }
+          placeholder="Enter fare"
+        />
+      ),
+    },
+  ]
+
   return (
     <AdminLayout
       userEmail={userEmail}
@@ -261,63 +309,24 @@ function TrainFarePage({ userEmail, onSignOut, onTabChange }) {
         </div>
       )}
       {routeLoaded && (
-        <div className="table-card">
-          <div className="results-caption">
-            {lineName} · {direction === 'southWest' ? DIRECTIONS.southWest : DIRECTIONS.northEast} ·
-            Trip {tripId}
-          </div>
-          <div className="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>Origin</th>
-                  <th>Destination</th>
-                  <th>STANDARD</th>
-                  <th>DISCOUNTED</th>
-                </tr>
-              </thead>
-              <tbody>
-                {downstreamStopIds.map((destinationStopId) => (
-                  <tr key={destinationStopId}>
-                    <td>{stationLabel(stopMap.get(originStopId))}</td>
-                    <td>{stationLabel(stopMap.get(destinationStopId))}</td>
-                    <td>
-                      <input
-                        className="table-fare-input"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={standardValues[destinationStopId] ?? ''}
-                        onChange={(event) =>
-                          updateValue(setStandardValues, destinationStopId, event.target.value)
-                        }
-                        placeholder="Enter fare"
-                      />
-                    </td>
-                    <td>
-                      <input
-                        className="table-fare-input"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={discountedValues[destinationStopId] ?? ''}
-                        onChange={(event) =>
-                          updateValue(setDiscountedValues, destinationStopId, event.target.value)
-                        }
-                        placeholder="Enter fare"
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="batch-actions">
-            <button className="primary-button" type="button" onClick={saveFares} disabled={saving}>
-              {saving ? 'Saving fares…' : 'Save fares'}
-            </button>
-          </div>
-        </div>
+        <DataTable
+          caption={`${lineName} · ${direction === 'southWest' ? DIRECTIONS.southWest : DIRECTIONS.northEast} · Trip ${tripId}`}
+          columns={trainFareColumns}
+          rows={downstreamStopIds}
+          getRowKey={(destinationStopId) => destinationStopId}
+          footer={
+            <div className="batch-actions">
+              <button
+                className="primary-button"
+                type="button"
+                onClick={saveFares}
+                disabled={saving}
+              >
+                {saving ? 'Saving fares…' : 'Save fares'}
+              </button>
+            </div>
+          }
+        />
       )}
     </AdminLayout>
   )

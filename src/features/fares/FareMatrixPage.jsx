@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import DataTable from '../../components/DataTable'
 import PageHeader from '../../components/PageHeader'
 import AdminLayout from '../../layouts/AdminLayout'
 import { createFare, FARE_TYPES, getFareMatrix, updateFare, VEHICLE_TYPES } from './faresService'
@@ -239,6 +240,52 @@ function FareMatrixPage({ userEmail, onSignOut, onTabChange }) {
     setEditingFare(null)
   }
 
+  const fareColumns = [
+    {
+      key: 'vehicle_type',
+      label: 'Vehicle',
+      render: (fare) => <strong>{fare.vehicle_type}</strong>,
+    },
+    { key: 'fare_type', label: 'Type' },
+    {
+      key: 'minimum_distance_meters',
+      label: 'Minimum distance',
+      render: (fare) => `${fare.minimum_distance_meters.toLocaleString()} m`,
+    },
+    {
+      key: 'minimum_fare',
+      label: 'Minimum fare',
+      render: (fare) => `${fare.currency} ${Number(fare.minimum_fare).toFixed(2)}`,
+    },
+    {
+      key: 'increment_distance_meters',
+      label: 'Increment distance',
+      render: (fare) => `${fare.increment_distance_meters.toLocaleString()} m`,
+    },
+    {
+      key: 'increment_fare',
+      label: 'Increment fare',
+      render: (fare) => `${fare.currency} ${Number(fare.increment_fare).toFixed(2)}`,
+    },
+    { key: 'currency', label: 'Currency' },
+    {
+      key: 'actions',
+      label: '',
+      render: (fare) => (
+        <button
+          className="table-action"
+          type="button"
+          onClick={() => {
+            setEditingFare(fare)
+            setFormOpen(true)
+          }}
+        >
+          Edit
+        </button>
+      ),
+    },
+  ]
+
   return (
     <AdminLayout userEmail={userEmail} onSignOut={onSignOut} activeTab="fares">
       <PageHeader title="Fare Matrix" subtitle="Manage fare information used by the Para app.">
@@ -273,55 +320,7 @@ function FareMatrixPage({ userEmail, onSignOut, onTabChange }) {
         </div>
       )}
       {!loading && !error && fares.length > 0 && (
-        <div className="table-card">
-          <div className="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>Vehicle</th>
-                  <th>Type</th>
-                  <th>Minimum distance</th>
-                  <th>Minimum fare</th>
-                  <th>Increment distance</th>
-                  <th>Increment fare</th>
-                  <th>Currency</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {fares.map((fare) => (
-                  <tr key={fare.fare_id}>
-                    <td>
-                      <strong>{fare.vehicle_type}</strong>
-                    </td>
-                    <td>{fare.fare_type}</td>
-                    <td>{fare.minimum_distance_meters.toLocaleString()} m</td>
-                    <td>
-                      {fare.currency} {Number(fare.minimum_fare).toFixed(2)}
-                    </td>
-                    <td>{fare.increment_distance_meters.toLocaleString()} m</td>
-                    <td>
-                      {fare.currency} {Number(fare.increment_fare).toFixed(2)}
-                    </td>
-                    <td>{fare.currency}</td>
-                    <td>
-                      <button
-                        className="table-action"
-                        type="button"
-                        onClick={() => {
-                          setEditingFare(fare)
-                          setFormOpen(true)
-                        }}
-                      >
-                        Edit
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <DataTable columns={fareColumns} rows={fares} getRowKey={(fare) => fare.fare_id} />
       )}
       {formOpen && (
         <FareForm

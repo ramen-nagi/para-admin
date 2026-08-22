@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import DataTable from '../../components/DataTable'
 import PageHeader from '../../components/PageHeader'
 import StatusSummary from '../../components/StatusSummary'
 import TableFilters from '../../components/TableFilters'
@@ -191,6 +192,43 @@ function RouteSuggestionsPage({ userEmail, onSignOut, onTabChange }) {
     setSelectedSuggestion(updatedSuggestion)
   }
 
+  const suggestionColumns = [
+    {
+      key: 'route_name',
+      label: 'Route name',
+      render: (suggestion) => <strong>{suggestion.route_name}</strong>,
+    },
+    {
+      key: 'vehicle_type',
+      label: 'Vehicle',
+      render: (suggestion) => vehicleLabels[suggestion.vehicle_type] ?? suggestion.vehicle_type,
+    },
+    {
+      key: 'start',
+      label: 'Start',
+      render: (suggestion) => `${suggestion.start_latitude}, ${suggestion.start_longitude}`,
+    },
+    {
+      key: 'end',
+      label: 'End',
+      render: (suggestion) => `${suggestion.end_latitude}, ${suggestion.end_longitude}`,
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (suggestion) => (
+        <span className={`status-badge ${suggestion.status}`}>
+          {SUGGESTION_STATUSES[suggestion.status]}
+        </span>
+      ),
+    },
+    {
+      key: 'created_at',
+      label: 'Submitted',
+      render: (suggestion) => formatDate(suggestion.created_at),
+    },
+  ]
+
   return (
     <AdminLayout
       userEmail={userEmail}
@@ -245,54 +283,13 @@ function RouteSuggestionsPage({ userEmail, onSignOut, onTabChange }) {
         </div>
       )}
       {!loading && !error && filteredSuggestions.length > 0 && (
-        <div className="table-card">
-          <div className="results-caption">
-            Showing {filteredSuggestions.length} of {suggestions.length} route suggestions
-          </div>
-          <div className="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>Route name</th>
-                  <th>Vehicle</th>
-                  <th>Start</th>
-                  <th>End</th>
-                  <th>Status</th>
-                  <th>Submitted</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredSuggestions.map((suggestion) => (
-                  <tr
-                    key={suggestion.id}
-                    tabIndex="0"
-                    onClick={() => setSelectedSuggestion(suggestion)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter') setSelectedSuggestion(suggestion)
-                    }}
-                  >
-                    <td>
-                      <strong>{suggestion.route_name}</strong>
-                    </td>
-                    <td>{vehicleLabels[suggestion.vehicle_type] ?? suggestion.vehicle_type}</td>
-                    <td>
-                      {suggestion.start_latitude}, {suggestion.start_longitude}
-                    </td>
-                    <td>
-                      {suggestion.end_latitude}, {suggestion.end_longitude}
-                    </td>
-                    <td>
-                      <span className={`status-badge ${suggestion.status}`}>
-                        {SUGGESTION_STATUSES[suggestion.status]}
-                      </span>
-                    </td>
-                    <td>{formatDate(suggestion.created_at)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <DataTable
+          caption={`Showing ${filteredSuggestions.length} of ${suggestions.length} route suggestions`}
+          columns={suggestionColumns}
+          rows={filteredSuggestions}
+          getRowKey={(suggestion) => suggestion.id}
+          onRowClick={setSelectedSuggestion}
+        />
       )}
       {selectedSuggestion && (
         <SuggestionDetails

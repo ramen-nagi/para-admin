@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import DataTable from '../../components/DataTable'
 import PageHeader from '../../components/PageHeader'
 import StatusSummary from '../../components/StatusSummary'
 import TableFilters from '../../components/TableFilters'
@@ -208,6 +209,30 @@ function ReportsPage({ userEmail, onSignOut, onTabChange }) {
     setSelectedReport(updatedReport)
   }
 
+  const reportColumns = [
+    {
+      key: 'category',
+      label: 'Category',
+      render: (report) => <strong>{categoryLabels[report.category] ?? report.category}</strong>,
+    },
+    { key: 'description', label: 'Description', className: 'description-cell' },
+    {
+      key: 'route',
+      label: 'Route / trip',
+      render: (report) => report.route_id || report.trip_id || '—',
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (report) => (
+        <span className={`status-badge ${report.status}`}>
+          {statusLabels[report.status] ?? report.status}
+        </span>
+      ),
+    },
+    { key: 'created_at', label: 'Submitted', render: (report) => formatDate(report.created_at) },
+  ]
+
   return (
     <AdminLayout
       userEmail={userEmail}
@@ -268,48 +293,13 @@ function ReportsPage({ userEmail, onSignOut, onTabChange }) {
         </div>
       )}
       {!loading && !error && filteredReports.length > 0 && (
-        <div className="table-card">
-          <div className="results-caption">
-            Showing {filteredReports.length} of {reports.length} reports
-          </div>
-          <div className="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>Category</th>
-                  <th>Description</th>
-                  <th>Route / trip</th>
-                  <th>Status</th>
-                  <th>Submitted</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredReports.map((report) => (
-                  <tr
-                    key={report.id}
-                    onClick={() => setSelectedReport(report)}
-                    tabIndex="0"
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter') setSelectedReport(report)
-                    }}
-                  >
-                    <td>
-                      <strong>{categoryLabels[report.category] ?? report.category}</strong>
-                    </td>
-                    <td className="description-cell">{report.description}</td>
-                    <td>{report.route_id || report.trip_id || '—'}</td>
-                    <td>
-                      <span className={`status-badge ${report.status}`}>
-                        {statusLabels[report.status] ?? report.status}
-                      </span>
-                    </td>
-                    <td>{formatDate(report.created_at)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <DataTable
+          caption={`Showing ${filteredReports.length} of ${reports.length} reports`}
+          columns={reportColumns}
+          rows={filteredReports}
+          getRowKey={(report) => report.id}
+          onRowClick={setSelectedReport}
+        />
       )}
       {selectedReport && (
         <ReportDetails

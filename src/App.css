@@ -464,12 +464,12 @@ td {
   vertical-align: middle;
 }
 
-tbody tr {
+.table-row-interactive {
   cursor: pointer;
 }
 
-tbody tr:hover,
-tbody tr:focus {
+.table-row-interactive:hover,
+.table-row-interactive:focus {
   background: #f9fafb;
   outline: none;
 }
