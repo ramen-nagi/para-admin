@@ -276,6 +276,23 @@ input:focus {
   background: #fff;
 }
 
+.status-summary {
+  display: flex;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.status-summary .summary-card {
+  border: 0;
+  border-radius: 0;
+}
+
+.status-summary .summary-card + .summary-card {
+  border-left: 1px solid #e5e7eb;
+}
+
 .summary-card strong,
 .summary-card span {
   display: block;
@@ -286,7 +303,8 @@ input:focus {
   font-size: 24px;
 }
 
-.summary-card span {
+.summary-card p {
+  margin: 0;
   color: #6b7280;
   font-size: 12px;
 }
@@ -696,6 +714,14 @@ td strong {
   .summary-card {
     width: 100%;
     box-sizing: border-box;
+  }
+
+  .status-summary {
+    width: 100%;
+  }
+
+  .status-summary .summary-card {
+    width: 50%;
   }
 
   .filters-card {

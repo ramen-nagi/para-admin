@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import PageHeader from '../../components/PageHeader'
+import StatusSummary from '../../components/StatusSummary'
 import TableFilters from '../../components/TableFilters'
 import useTableFilters from '../../hooks/useTableFilters'
 import AdminLayout from '../../layouts/AdminLayout'
@@ -200,11 +201,6 @@ function ReportsPage({ userEmail, onSignOut, onTabChange }) {
     hasActiveFilters,
   } = useTableFilters(reports)
 
-  const openCount = useMemo(
-    () => filteredReports.filter((report) => report.status === 'open').length,
-    [filteredReports],
-  )
-
   function handleReportUpdated(updatedReport) {
     setReports((currentReports) =>
       currentReports.map((report) => (report.id === updatedReport.id ? updatedReport : report)),
@@ -223,10 +219,13 @@ function ReportsPage({ userEmail, onSignOut, onTabChange }) {
         title="Reports"
         subtitle="Review feedback submitted by commuters across Metro Manila."
       >
-        <div className="summary-card">
-          <strong>{openCount}</strong>
-          <span>Open visible reports</span>
-        </div>
+        <StatusSummary
+          rows={filteredReports}
+          statuses={[
+            { status: 'open', label: 'Open' },
+            { status: 'under_review', label: 'Under review' },
+          ]}
+        />
       </PageHeader>
       <TableFilters
         ariaLabel="Report filters"

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import PageHeader from '../../components/PageHeader'
+import StatusSummary from '../../components/StatusSummary'
 import TableFilters from '../../components/TableFilters'
 import useTableFilters from '../../hooks/useTableFilters'
 import AdminLayout from '../../layouts/AdminLayout'
@@ -197,7 +198,15 @@ function RouteSuggestionsPage({ userEmail, onSignOut, onTabChange }) {
       activeTab="route-suggestions"
       onTabChange={onTabChange}
     >
-      <PageHeader title="Route Suggestions" subtitle="Review routes suggested by commuters." />
+      <PageHeader title="Route Suggestions" subtitle="Review routes suggested by commuters.">
+        <StatusSummary
+          rows={filteredSuggestions}
+          statuses={[
+            { status: 'pending', label: 'Pending' },
+            { status: 'under_review', label: 'Under review' },
+          ]}
+        />
+      </PageHeader>
       <TableFilters
         ariaLabel="Route suggestion filters"
         statusOptions={statusOptions}
