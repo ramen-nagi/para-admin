@@ -39,6 +39,16 @@ function AdminLayout({ userEmail, onSignOut, activeTab, onTabChange, children })
           >
             Train Fare
           </button>
+          <button
+            className={`nav-item ${activeTab === 'route-suggestions' ? 'active' : ''}`}
+            type="button"
+            onClick={() => {
+              onTabChange?.('route-suggestions')
+              window.location.hash = 'route-suggestions'
+            }}
+          >
+            Route Suggestions
+          </button>
           <a className="nav-item" href={gtfsEditorUrl}>
             GTFS Editor
           </a>

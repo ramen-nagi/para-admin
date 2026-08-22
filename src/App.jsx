@@ -5,6 +5,7 @@ import LoginPage from './features/auth/LoginPage'
 import ReportsPage from './features/reports/ReportsPage'
 import FareMatrixPage from './features/fares/FareMatrixPage'
 import TrainFarePage from './features/train-fares/TrainFarePage'
+import RouteSuggestionsPage from './features/route-suggestions/RouteSuggestionsPage'
 import { getCurrentSession, signOut, subscribeToAuthChanges } from './features/auth/authService'
 
 function App() {
@@ -58,6 +59,14 @@ function App() {
   if (activeTab === 'train-fares')
     return (
       <TrainFarePage
+        userEmail={session.user.email}
+        onSignOut={handleSignOut}
+        onTabChange={setActiveTab}
+      />
+    )
+  if (activeTab === 'route-suggestions')
+    return (
+      <RouteSuggestionsPage
         userEmail={session.user.email}
         onSignOut={handleSignOut}
         onTabChange={setActiveTab}
