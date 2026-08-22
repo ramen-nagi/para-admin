@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import PageHeader from '../../components/PageHeader'
 import AdminLayout from '../../layouts/AdminLayout'
 import {
   createTrainFares,
@@ -179,15 +180,10 @@ function TrainFarePage({ userEmail, onSignOut, onTabChange }) {
       activeTab="train-fares"
       onTabChange={onTabChange}
     >
-      <header className="page-header">
-        <div>
-          <p className="eyebrow">Para Admin</p>
-          <h1>Train Fare</h1>
-          <p className="page-subtitle">
-            Choose a line, direction, and origin to manage downstream station fares.
-          </p>
-        </div>
-      </header>
+      <PageHeader
+        title="Train Fare"
+        subtitle="Choose a line, direction, and origin to manage downstream station fares."
+      />
       <section className="train-fare-filters" aria-label="Train fare selection">
         <div className="filter-field">
           <label htmlFor="train-line">Train line</label>

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import PageHeader from '../../components/PageHeader'
 import TableFilters from '../../components/TableFilters'
 import useTableFilters from '../../hooks/useTableFilters'
 import AdminLayout from '../../layouts/AdminLayout'
@@ -218,19 +219,15 @@ function ReportsPage({ userEmail, onSignOut, onTabChange }) {
       activeTab="reports"
       onTabChange={onTabChange}
     >
-      <header className="page-header">
-        <div>
-          <p className="eyebrow">Para Admin</p>
-          <h1>Reports</h1>
-          <p className="page-subtitle">
-            Review feedback submitted by commuters across Metro Manila.
-          </p>
-        </div>
+      <PageHeader
+        title="Reports"
+        subtitle="Review feedback submitted by commuters across Metro Manila."
+      >
         <div className="summary-card">
           <strong>{openCount}</strong>
           <span>Open visible reports</span>
         </div>
-      </header>
+      </PageHeader>
       <TableFilters
         ariaLabel="Report filters"
         statusOptions={[

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import PageHeader from '../../components/PageHeader'
 import AdminLayout from '../../layouts/AdminLayout'
 import { createFare, FARE_TYPES, getFareMatrix, updateFare, VEHICLE_TYPES } from './faresService'
 
@@ -240,12 +241,7 @@ function FareMatrixPage({ userEmail, onSignOut, onTabChange }) {
 
   return (
     <AdminLayout userEmail={userEmail} onSignOut={onSignOut} activeTab="fares">
-      <header className="page-header">
-        <div>
-          <p className="eyebrow">Para Admin</p>
-          <h1>Fare Matrix</h1>
-          <p className="page-subtitle">Manage fare information used by the Para app.</p>
-        </div>
+      <PageHeader title="Fare Matrix" subtitle="Manage fare information used by the Para app.">
         <button
           className="primary-button add-button"
           type="button"
@@ -256,7 +252,7 @@ function FareMatrixPage({ userEmail, onSignOut, onTabChange }) {
         >
           Add fare
         </button>
-      </header>
+      </PageHeader>
       {loading && (
         <div className="state-card">
           <p>Loading fares…</p>

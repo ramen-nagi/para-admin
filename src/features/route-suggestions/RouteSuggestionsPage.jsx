@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import PageHeader from '../../components/PageHeader'
 import TableFilters from '../../components/TableFilters'
 import useTableFilters from '../../hooks/useTableFilters'
 import AdminLayout from '../../layouts/AdminLayout'
@@ -196,13 +197,7 @@ function RouteSuggestionsPage({ userEmail, onSignOut, onTabChange }) {
       activeTab="route-suggestions"
       onTabChange={onTabChange}
     >
-      <header className="page-header">
-        <div>
-          <p className="eyebrow">Para Admin</p>
-          <h1>Route Suggestions</h1>
-          <p className="page-subtitle">Review routes suggested by commuters.</p>
-        </div>
-      </header>
+      <PageHeader title="Route Suggestions" subtitle="Review routes suggested by commuters." />
       <TableFilters
         ariaLabel="Route suggestion filters"
         statusOptions={statusOptions}
