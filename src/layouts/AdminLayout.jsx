@@ -1,8 +1,8 @@
-function AdminLayout({ userEmail, onSignOut, activeTab, onTabChange, children }) {
+function AdminLayout({ userEmail, onSignOut, activeTab, onTabChange, children, editorPanel }) {
   const gtfsEditorUrl = import.meta.env.VITE_GTFS_EDITOR_URL || 'http://localhost:5174'
 
   return (
-    <div className="admin-shell">
+    <div className={`admin-shell ${editorPanel ? 'has-editor-panel' : ''}`}>
       <aside className="sidebar">
         <div className="sidebar-brand">
           <span className="brand-mark small">P</span>
@@ -89,7 +89,8 @@ function AdminLayout({ userEmail, onSignOut, activeTab, onTabChange, children })
           </button>
         </div>
       </aside>
-      <div className="admin-content">{children}</div>
+      <main className="admin-content">{children}</main>
+      {editorPanel && <div className="editor-panel-column">{editorPanel}</div>}
     </div>
   )
 }

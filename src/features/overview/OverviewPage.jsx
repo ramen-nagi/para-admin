@@ -167,12 +167,6 @@ function OverviewPage({ userEmail, onSignOut, onTabChange }) {
             }
             onClick={() => goToTab('train-fares')}
           />
-          <MetricCard
-            title="GTFS Editor"
-            value="Open"
-            subtitle="Edit GTFS data"
-            href={import.meta.env.VITE_GTFS_EDITOR_URL || 'http://localhost:5174'}
-          />
         </section>
       )}
     </AdminLayout>

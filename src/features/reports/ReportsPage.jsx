@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import DataTable from '../../components/DataTable'
 import PageHeader from '../../components/PageHeader'
+import SidePanel from '../../components/SidePanel'
 import StatusSummary from '../../components/StatusSummary'
 import TableFilters from '../../components/TableFilters'
 import useTableFilters from '../../hooks/useTableFilters'
@@ -71,93 +72,85 @@ function ReportDetails({ report, onClose, onUpdated }) {
   }
 
   return (
-    <div className="detail-overlay" role="presentation" onClick={onClose}>
-      <section
-        className="detail-panel"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="report-detail-title"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="detail-header">
-          <div>
-            <p className="eyebrow">Report details</p>
-            <h2 id="report-detail-title">{categoryLabels[report.category] ?? report.category}</h2>
-          </div>
-          <button
-            className="close-button"
-            type="button"
-            aria-label="Close report details"
-            onClick={onClose}
+    <section className="side-panel-content" aria-labelledby="report-detail-title">
+      <div className="detail-header">
+        <div>
+          <p className="eyebrow">Report details</p>
+          <h2 id="report-detail-title">{categoryLabels[report.category] ?? report.category}</h2>
+        </div>
+        <button
+          className="close-button"
+          type="button"
+          aria-label="Close report details"
+          onClick={onClose}
+        >
+          ×
+        </button>
+      </div>
+      <div className="detail-status">
+        <span className={`status-badge ${report.status}`}>
+          {statusLabels[report.status] ?? report.status}
+        </span>
+        <span>{formatDate(report.created_at)}</span>
+      </div>
+      <div className="detail-section">
+        <h3>Description</h3>
+        <p className="report-description">{report.description}</p>
+      </div>
+      <div className="detail-grid">
+        <DetailField label="Route ID" value={report.route_id} />
+        <DetailField label="Trip ID" value={report.trip_id} />
+        <DetailField label="From stop" value={report.from_stop_id} />
+        <DetailField label="To stop" value={report.to_stop_id} />
+        <DetailField label="Vehicle type" value={report.vehicle_type} />
+        <DetailField label="Platform" value={report.platform} />
+        <DetailField label="App version" value={report.app_version} />
+        <DetailField label="Reporter ID" value={report.reporter_id} />
+        <DetailField label="Expected fare" value={formatFare(report.expected_fare)} />
+        <DetailField label="Observed fare" value={formatFare(report.observed_fare)} />
+        <DetailField label="Last updated" value={formatDate(report.updated_at)} />
+        <DetailField label="Resolved at" value={formatDate(report.resolved_at)} />
+      </div>
+      <form className="edit-section" onSubmit={handleSave}>
+        <div className="edit-field">
+          <label htmlFor="report-status">Status</label>
+          <select
+            id="report-status"
+            value={status}
+            onChange={(event) => setStatus(event.target.value)}
           >
-            ×
-          </button>
+            {Object.entries(statusLabels).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
         </div>
-        <div className="detail-status">
-          <span className={`status-badge ${report.status}`}>
-            {statusLabels[report.status] ?? report.status}
-          </span>
-          <span>{formatDate(report.created_at)}</span>
+        <div className="edit-field">
+          <label htmlFor="admin-notes">Admin notes</label>
+          <textarea
+            id="admin-notes"
+            rows="5"
+            value={adminNotes}
+            onChange={(event) => setAdminNotes(event.target.value)}
+            placeholder="Add internal notes about this report…"
+          />
         </div>
-        <div className="detail-section">
-          <h3>Description</h3>
-          <p className="report-description">{report.description}</p>
-        </div>
-        <div className="detail-grid">
-          <DetailField label="Route ID" value={report.route_id} />
-          <DetailField label="Trip ID" value={report.trip_id} />
-          <DetailField label="From stop" value={report.from_stop_id} />
-          <DetailField label="To stop" value={report.to_stop_id} />
-          <DetailField label="Vehicle type" value={report.vehicle_type} />
-          <DetailField label="Platform" value={report.platform} />
-          <DetailField label="App version" value={report.app_version} />
-          <DetailField label="Reporter ID" value={report.reporter_id} />
-          <DetailField label="Expected fare" value={formatFare(report.expected_fare)} />
-          <DetailField label="Observed fare" value={formatFare(report.observed_fare)} />
-          <DetailField label="Last updated" value={formatDate(report.updated_at)} />
-          <DetailField label="Resolved at" value={formatDate(report.resolved_at)} />
-        </div>
-        <form className="edit-section" onSubmit={handleSave}>
-          <div className="edit-field">
-            <label htmlFor="report-status">Status</label>
-            <select
-              id="report-status"
-              value={status}
-              onChange={(event) => setStatus(event.target.value)}
-            >
-              {Object.entries(statusLabels).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="edit-field">
-            <label htmlFor="admin-notes">Admin notes</label>
-            <textarea
-              id="admin-notes"
-              rows="5"
-              value={adminNotes}
-              onChange={(event) => setAdminNotes(event.target.value)}
-              placeholder="Add internal notes about this report…"
-            />
-          </div>
-          {saveError && (
-            <p className="error-message" role="alert">
-              {saveError}
-            </p>
-          )}
-          {saved && (
-            <p className="success-message" role="status">
-              Report updated successfully.
-            </p>
-          )}
-          <button className="primary-button" type="submit" disabled={saving}>
-            {saving ? 'Saving…' : 'Save changes'}
-          </button>
-        </form>
-      </section>
-    </div>
+        {saveError && (
+          <p className="error-message" role="alert">
+            {saveError}
+          </p>
+        )}
+        {saved && (
+          <p className="success-message" role="status">
+            Report updated successfully.
+          </p>
+        )}
+        <button className="primary-button" type="submit" disabled={saving}>
+          {saving ? 'Saving…' : 'Save changes'}
+        </button>
+      </form>
+    </section>
   )
 }
 
@@ -239,6 +232,22 @@ function ReportsPage({ userEmail, onSignOut, onTabChange }) {
       onSignOut={onSignOut}
       activeTab="reports"
       onTabChange={onTabChange}
+      editorPanel={
+        <SidePanel
+          title="Report details"
+          isEmpty={!selectedReport}
+          emptyMessage="Select a report to view and edit its details."
+        >
+          {selectedReport && (
+            <ReportDetails
+              key={`${selectedReport.id}-${selectedReport.updated_at}`}
+              report={selectedReport}
+              onClose={() => setSelectedReport(null)}
+              onUpdated={handleReportUpdated}
+            />
+          )}
+        </SidePanel>
+      }
     >
       <PageHeader
         title="Reports"
@@ -299,14 +308,6 @@ function ReportsPage({ userEmail, onSignOut, onTabChange }) {
           rows={filteredReports}
           getRowKey={(report) => report.id}
           onRowClick={setSelectedReport}
-        />
-      )}
-      {selectedReport && (
-        <ReportDetails
-          key={`${selectedReport.id}-${selectedReport.updated_at}`}
-          report={selectedReport}
-          onClose={() => setSelectedReport(null)}
-          onUpdated={handleReportUpdated}
         />
       )}
     </AdminLayout>

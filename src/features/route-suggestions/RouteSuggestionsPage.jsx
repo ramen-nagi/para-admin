@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import DataTable from '../../components/DataTable'
 import PageHeader from '../../components/PageHeader'
+import SidePanel from '../../components/SidePanel'
 import StatusSummary from '../../components/StatusSummary'
 import TableFilters from '../../components/TableFilters'
 import useTableFilters from '../../hooks/useTableFilters'
@@ -50,99 +51,86 @@ function SuggestionDetails({ suggestion, onClose, onUpdated }) {
   }
 
   return (
-    <div className="detail-overlay" role="presentation" onClick={onClose}>
-      <section
-        className="detail-panel"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="suggestion-title"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="detail-header">
-          <div>
-            <p className="eyebrow">Route suggestion</p>
-            <h2 id="suggestion-title">{suggestion.route_name}</h2>
-          </div>
-          <button
-            className="close-button"
-            type="button"
-            aria-label="Close details"
-            onClick={onClose}
+    <section className="side-panel-content" aria-labelledby="suggestion-title">
+      <div className="detail-header">
+        <div>
+          <p className="eyebrow">Route suggestion</p>
+          <h2 id="suggestion-title">{suggestion.route_name}</h2>
+        </div>
+        <button className="close-button" type="button" aria-label="Close details" onClick={onClose}>
+          ×
+        </button>
+      </div>
+      <div className="detail-status">
+        <span className={`status-badge ${suggestion.status}`}>
+          {SUGGESTION_STATUSES[suggestion.status]}
+        </span>
+        <span>{formatDate(suggestion.created_at)}</span>
+      </div>
+      <div className="detail-grid">
+        <div className="detail-field">
+          <dt>Vehicle type</dt>
+          <dd>{vehicleLabels[suggestion.vehicle_type] ?? suggestion.vehicle_type}</dd>
+        </div>
+        <div className="detail-field">
+          <dt>Reporter ID</dt>
+          <dd>{suggestion.reporter_id || '—'}</dd>
+        </div>
+        <div className="detail-field">
+          <dt>Start coordinates</dt>
+          <dd>
+            {suggestion.start_latitude}, {suggestion.start_longitude}
+          </dd>
+        </div>
+        <div className="detail-field">
+          <dt>End coordinates</dt>
+          <dd>
+            {suggestion.end_latitude}, {suggestion.end_longitude}
+          </dd>
+        </div>
+      </div>
+      {suggestion.roads_traversed && (
+        <div className="detail-section">
+          <h3>Roads traversed</h3>
+          <p className="report-description">{suggestion.roads_traversed}</p>
+        </div>
+      )}
+      {suggestion.notes && (
+        <div className="detail-section">
+          <h3>Notes</h3>
+          <p className="report-description">{suggestion.notes}</p>
+        </div>
+      )}
+      <form className="edit-section" onSubmit={handleSave}>
+        <div className="edit-field">
+          <label htmlFor="suggestion-status">Status</label>
+          <select
+            id="suggestion-status"
+            value={status}
+            onChange={(event) => setStatus(event.target.value)}
           >
-            ×
-          </button>
+            {Object.entries(SUGGESTION_STATUSES).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
         </div>
-        <div className="detail-status">
-          <span className={`status-badge ${suggestion.status}`}>
-            {SUGGESTION_STATUSES[suggestion.status]}
-          </span>
-          <span>{formatDate(suggestion.created_at)}</span>
-        </div>
-        <div className="detail-grid">
-          <div className="detail-field">
-            <dt>Vehicle type</dt>
-            <dd>{vehicleLabels[suggestion.vehicle_type] ?? suggestion.vehicle_type}</dd>
-          </div>
-          <div className="detail-field">
-            <dt>Reporter ID</dt>
-            <dd>{suggestion.reporter_id || '—'}</dd>
-          </div>
-          <div className="detail-field">
-            <dt>Start coordinates</dt>
-            <dd>
-              {suggestion.start_latitude}, {suggestion.start_longitude}
-            </dd>
-          </div>
-          <div className="detail-field">
-            <dt>End coordinates</dt>
-            <dd>
-              {suggestion.end_latitude}, {suggestion.end_longitude}
-            </dd>
-          </div>
-        </div>
-        {suggestion.roads_traversed && (
-          <div className="detail-section">
-            <h3>Roads traversed</h3>
-            <p className="report-description">{suggestion.roads_traversed}</p>
-          </div>
+        {error && (
+          <p className="error-message" role="alert">
+            {error}
+          </p>
         )}
-        {suggestion.notes && (
-          <div className="detail-section">
-            <h3>Notes</h3>
-            <p className="report-description">{suggestion.notes}</p>
-          </div>
+        {saved && (
+          <p className="success-message" role="status">
+            Suggestion status updated successfully.
+          </p>
         )}
-        <form className="edit-section" onSubmit={handleSave}>
-          <div className="edit-field">
-            <label htmlFor="suggestion-status">Status</label>
-            <select
-              id="suggestion-status"
-              value={status}
-              onChange={(event) => setStatus(event.target.value)}
-            >
-              {Object.entries(SUGGESTION_STATUSES).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </div>
-          {error && (
-            <p className="error-message" role="alert">
-              {error}
-            </p>
-          )}
-          {saved && (
-            <p className="success-message" role="status">
-              Suggestion status updated successfully.
-            </p>
-          )}
-          <button className="primary-button" type="submit" disabled={saving}>
-            {saving ? 'Saving…' : 'Save status'}
-          </button>
-        </form>
-      </section>
-    </div>
+        <button className="primary-button" type="submit" disabled={saving}>
+          {saving ? 'Saving…' : 'Save status'}
+        </button>
+      </form>
+    </section>
   )
 }
 
@@ -235,6 +223,22 @@ function RouteSuggestionsPage({ userEmail, onSignOut, onTabChange }) {
       onSignOut={onSignOut}
       activeTab="route-suggestions"
       onTabChange={onTabChange}
+      editorPanel={
+        <SidePanel
+          title="Route suggestion"
+          isEmpty={!selectedSuggestion}
+          emptyMessage="Select a route suggestion to view and update its status."
+        >
+          {selectedSuggestion && (
+            <SuggestionDetails
+              key={selectedSuggestion.id}
+              suggestion={selectedSuggestion}
+              onClose={() => setSelectedSuggestion(null)}
+              onUpdated={handleUpdated}
+            />
+          )}
+        </SidePanel>
+      }
     >
       <PageHeader title="Route Suggestions" subtitle="Review routes suggested by commuters.">
         <StatusSummary
@@ -289,13 +293,6 @@ function RouteSuggestionsPage({ userEmail, onSignOut, onTabChange }) {
           rows={filteredSuggestions}
           getRowKey={(suggestion) => suggestion.id}
           onRowClick={setSelectedSuggestion}
-        />
-      )}
-      {selectedSuggestion && (
-        <SuggestionDetails
-          suggestion={selectedSuggestion}
-          onClose={() => setSelectedSuggestion(null)}
-          onUpdated={handleUpdated}
         />
       )}
     </AdminLayout>
