@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import './App.css'
 import AuthLayout from './layouts/AuthLayout'
 import LoginPage from './features/auth/LoginPage'
+import OverviewPage from './features/overview/OverviewPage'
 import ReportsPage from './features/reports/ReportsPage'
 import FareMatrixPage from './features/fares/FareMatrixPage'
 import TrainFarePage from './features/train-fares/TrainFarePage'
@@ -11,7 +12,7 @@ import { getCurrentSession, signOut, subscribeToAuthChanges } from './features/a
 function App() {
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState(() => window.location.hash.slice(1) || 'reports')
+  const [activeTab, setActiveTab] = useState(() => window.location.hash.slice(1) || 'overview')
 
   useEffect(() => {
     let mounted = true
@@ -30,7 +31,7 @@ function App() {
 
   useEffect(() => {
     function handleHashChange() {
-      setActiveTab(window.location.hash.slice(1) || 'reports')
+      setActiveTab(window.location.hash.slice(1) || 'overview')
     }
     window.addEventListener('hashchange', handleHashChange)
     return () => window.removeEventListener('hashchange', handleHashChange)
@@ -41,13 +42,27 @@ function App() {
     setSession(null)
   }
 
+  function handleSignedIn(currentSession) {
+    setSession(currentSession)
+    setActiveTab('overview')
+    window.location.hash = 'overview'
+  }
+
   if (loading)
     return (
       <AuthLayout>
         <p className="loading">Loading…</p>
       </AuthLayout>
     )
-  if (!session) return <LoginPage onSignedIn={setSession} />
+  if (!session) return <LoginPage onSignedIn={handleSignedIn} />
+  if (activeTab === 'overview')
+    return (
+      <OverviewPage
+        userEmail={session.user.email}
+        onSignOut={handleSignOut}
+        onTabChange={setActiveTab}
+      />
+    )
   if (activeTab === 'fares')
     return (
       <FareMatrixPage

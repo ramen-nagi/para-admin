@@ -10,6 +10,16 @@ function AdminLayout({ userEmail, onSignOut, activeTab, onTabChange, children })
         </div>
         <nav aria-label="Main navigation">
           <button
+            className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`}
+            type="button"
+            onClick={() => {
+              onTabChange?.('overview')
+              window.location.hash = 'overview'
+            }}
+          >
+            Overview
+          </button>
+          <button
             className={`nav-item ${activeTab === 'reports' ? 'active' : ''}`}
             type="button"
             onClick={() => {

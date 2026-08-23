@@ -1,13 +1,12 @@
 Dedicated Admin Website for PARA
 
-Should be able to:
-1. READ AND UPDATE reports submitted through the app
-2. CREATE AND UPDATE fare for distance-based and station-based
-3. Route to the Para App GTFS Editor
+Features:
+1. Admin authentication
+2. Read, update reports from the supabase reports table
+3. Read, update fare for distance-based transit
+4. Read, update fare for origin/destination station pairs transit (for trains)
+5. Read, update route suggestions submitted by users
+6. Link the para-gtfs-editor tool
 
-GTFS Editor runs locally
-so run it for the mean time on http://localhost:5174
-while this admin website runs on http://localhost:5173
-
-After setting the GTFS editor to localhost:5174
-Update VITE_GTFS_EDITOR_URL=http://localhost:5174
+TODO:
+1. Add Overview tab
