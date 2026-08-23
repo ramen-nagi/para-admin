@@ -319,6 +319,46 @@ input:focus {
   margin: 0 auto;
 }
 
+.overview-attention-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  max-width: 1200px;
+  margin: 28px auto 0;
+}
+
+.overview-attention-section {
+  min-width: 0;
+}
+
+.overview-attention-section h2 {
+  margin: 0 0 12px;
+  color: #111827;
+  font-size: 18px;
+}
+
+.overview-attention-section .table-card {
+  max-width: none;
+}
+
+.overview-empty {
+  min-height: 90px;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  box-sizing: border-box;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  color: #6b7280;
+  font-size: 13px;
+  text-align: center;
+}
+
+.overview-empty p {
+  margin: 0;
+}
+
 .overview-card {
   display: block;
   min-height: 170px;
@@ -853,6 +893,10 @@ td strong {
 
   .status-summary .summary-card {
     width: 50%;
+  }
+
+  .overview-attention-grid {
+    grid-template-columns: 1fr;
   }
 
   .filters-card {

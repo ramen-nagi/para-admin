@@ -31,13 +31,14 @@ function countExpectedTrainFares() {
 export const EXPECTED_DISTANCE_FARES = VEHICLE_TYPES.length * FARE_TYPES.length
 export const EXPECTED_TRAIN_FARES = countExpectedTrainFares().size
 
-async function getStatusCount(table, status) {
-  const { count, error } = await supabase
+async function getAttentionRows(table, select, statuses) {
+  const { data, error } = await supabase
     .from(table)
-    .select('id', { count: 'exact', head: true })
-    .eq('status', status)
+    .select(select)
+    .in('status', statuses)
+    .order('created_at', { ascending: false })
 
-  return { count: count ?? 0, error }
+  return { rows: data ?? [], error }
 }
 
 async function getDistanceFareCount() {
@@ -68,33 +69,45 @@ async function getTrainFareCompletion() {
 }
 
 export async function getOverviewMetrics() {
-  const [
-    openReports,
-    underReviewReports,
-    pendingSuggestions,
-    underReviewSuggestions,
-    fares,
-    trainFares,
-  ] = await Promise.all([
-    getStatusCount('reports', REPORT_ATTENTION_STATUSES[0]),
-    getStatusCount('reports', REPORT_ATTENTION_STATUSES[1]),
-    getStatusCount('route_suggestions', SUGGESTION_ATTENTION_STATUSES[0]),
-    getStatusCount('route_suggestions', SUGGESTION_ATTENTION_STATUSES[1]),
+  const [reports, routeSuggestions, fares, trainFares] = await Promise.all([
+    getAttentionRows(
+      'reports',
+      'id, created_at, category, description, status, route_id, trip_id',
+      REPORT_ATTENTION_STATUSES,
+    ),
+    getAttentionRows(
+      'route_suggestions',
+      'id, created_at, route_name, vehicle_type, status, start_latitude, start_longitude, end_latitude, end_longitude',
+      SUGGESTION_ATTENTION_STATUSES,
+    ),
     getDistanceFareCount(),
     getTrainFareCompletion(),
   ])
 
+  const openReports = reports.rows.filter((report) => report.status === 'open').length
+  const underReviewReports = reports.rows.filter(
+    (report) => report.status === 'under_review',
+  ).length
+  const pendingSuggestions = routeSuggestions.rows.filter(
+    (suggestion) => suggestion.status === 'pending',
+  ).length
+  const underReviewSuggestions = routeSuggestions.rows.filter(
+    (suggestion) => suggestion.status === 'under_review',
+  ).length
+
   return {
     metrics: {
       reports: {
-        open: openReports.count,
-        underReview: underReviewReports.count,
-        error: openReports.error || underReviewReports.error,
+        open: openReports,
+        underReview: underReviewReports,
+        rows: reports.rows,
+        error: reports.error,
       },
       routeSuggestions: {
-        pending: pendingSuggestions.count,
-        underReview: underReviewSuggestions.count,
-        error: pendingSuggestions.error || underReviewSuggestions.error,
+        pending: pendingSuggestions,
+        underReview: underReviewSuggestions,
+        rows: routeSuggestions.rows,
+        error: routeSuggestions.error,
       },
       distanceFares: {
         configured: fares.count,
@@ -107,13 +120,6 @@ export async function getOverviewMetrics() {
         error: trainFares.error,
       },
     },
-    error: [
-      openReports,
-      underReviewReports,
-      pendingSuggestions,
-      underReviewSuggestions,
-      fares,
-      trainFares,
-    ].some((result) => result.error),
+    error: [reports, routeSuggestions, fares, trainFares].some((result) => result.error),
   }
 }
