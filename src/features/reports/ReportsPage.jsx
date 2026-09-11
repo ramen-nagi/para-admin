@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import DataTable from '../../components/DataTable'
+import { VEHICLE_TYPE_LABELS } from '../../constants/vehicleTypes'
 import PageHeader from '../../components/PageHeader'
 import SidePanel from '../../components/SidePanel'
 import StatusSummary from '../../components/StatusSummary'
@@ -102,7 +103,10 @@ function ReportDetails({ report, onClose, onUpdated }) {
         <DetailField label="Trip ID" value={report.trip_id} />
         <DetailField label="From stop" value={report.from_stop_id} />
         <DetailField label="To stop" value={report.to_stop_id} />
-        <DetailField label="Vehicle type" value={report.vehicle_type} />
+        <DetailField
+          label="Vehicle type"
+          value={VEHICLE_TYPE_LABELS[report.vehicle_type] ?? report.vehicle_type}
+        />
         <DetailField label="Platform" value={report.platform} />
         <DetailField label="App version" value={report.app_version} />
         <DetailField label="Reporter ID" value={report.reporter_id} />

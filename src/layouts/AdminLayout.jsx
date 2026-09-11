@@ -1,3 +1,5 @@
+import { VEHICLE_TYPE_LABELS } from '../constants/vehicleTypes'
+
 function AdminLayout({ userEmail, onSignOut, activeTab, onTabChange, children, editorPanel }) {
   const gtfsEditorUrl = import.meta.env.VITE_GTFS_EDITOR_URL || 'http://localhost:5174'
 
@@ -64,21 +66,11 @@ function AdminLayout({ userEmail, onSignOut, activeTab, onTabChange, children, e
           </a>
         </nav>
         <div className="vehicle-legend" aria-label="Vehicle type legend">
-          <span>
-            <strong>1</strong> Tricycle
-          </span>
-          <span>
-            <strong>2</strong> Train
-          </span>
-          <span>
-            <strong>3</strong> Jeep
-          </span>
-          <span>
-            <strong>4</strong> Bus
-          </span>
-          <span>
-            <strong>5</strong> UVE
-          </span>
+          {Object.entries(VEHICLE_TYPE_LABELS).map(([type, label]) => (
+            <span key={type}>
+              <strong>{type}</strong> {label}
+            </span>
+          ))}
         </div>
         <div className="sidebar-footer">
           <span className="user-email" title={userEmail}>

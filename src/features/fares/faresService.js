@@ -1,6 +1,7 @@
+import { DISTANCE_FARE_VEHICLE_TYPES } from '../../constants/vehicleTypes'
 import { supabase } from '../../lib/supabase'
 
-export const VEHICLE_TYPES = [1, 3, 4, 5]
+export const VEHICLE_TYPES = DISTANCE_FARE_VEHICLE_TYPES
 export const FARE_TYPES = ['STANDARD', 'DISCOUNTED']
 
 export async function getFareMatrix() {

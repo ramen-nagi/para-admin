@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import DataTable from '../../components/DataTable'
+import { SUGGESTION_VEHICLE_LABELS } from '../../constants/vehicleTypes'
 import PageHeader from '../../components/PageHeader'
 import AdminLayout from '../../layouts/AdminLayout'
 import {
@@ -20,16 +21,6 @@ const categoryLabels = {
 const reportStatusLabels = {
   open: 'Open',
   under_review: 'Under review',
-}
-
-const vehicleLabels = {
-  bus: 'Bus',
-  jeep: 'Jeep',
-  train: 'Train',
-  tricycle: 'Tricycle',
-  uv_express: 'UV Express',
-  modern_jeep: 'Modern Jeep',
-  unknown: 'Unknown',
 }
 
 function formatDate(value) {
@@ -172,7 +163,8 @@ function OverviewPage({ userEmail, onSignOut, onTabChange }) {
     {
       key: 'vehicle_type',
       label: 'Vehicle',
-      render: (suggestion) => vehicleLabels[suggestion.vehicle_type] ?? suggestion.vehicle_type,
+      render: (suggestion) =>
+        SUGGESTION_VEHICLE_LABELS[suggestion.vehicle_type] ?? suggestion.vehicle_type,
     },
     {
       key: 'start',

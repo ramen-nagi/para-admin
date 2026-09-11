@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import DataTable from '../../components/DataTable'
+import { SUGGESTION_VEHICLE_LABELS } from '../../constants/vehicleTypes'
 import PageHeader from '../../components/PageHeader'
 import SidePanel from '../../components/SidePanel'
 import StatusSummary from '../../components/StatusSummary'
@@ -11,16 +12,6 @@ import {
   SUGGESTION_STATUSES,
   updateRouteSuggestionStatus,
 } from './routeSuggestionsService'
-
-const vehicleLabels = {
-  bus: 'Bus',
-  jeep: 'Jeep',
-  train: 'Train',
-  tricycle: 'Tricycle',
-  uv_express: 'UV Express',
-  modern_jeep: 'Modern Jeep',
-  unknown: 'Unknown',
-}
 
 function formatDate(value) {
   return value
@@ -70,7 +61,7 @@ function SuggestionDetails({ suggestion, onClose, onUpdated }) {
       <div className="detail-grid">
         <div className="detail-field">
           <dt>Vehicle type</dt>
-          <dd>{vehicleLabels[suggestion.vehicle_type] ?? suggestion.vehicle_type}</dd>
+          <dd>{SUGGESTION_VEHICLE_LABELS[suggestion.vehicle_type] ?? suggestion.vehicle_type}</dd>
         </div>
         <div className="detail-field">
           <dt>Reporter ID</dt>
@@ -189,7 +180,8 @@ function RouteSuggestionsPage({ userEmail, onSignOut, onTabChange }) {
     {
       key: 'vehicle_type',
       label: 'Vehicle',
-      render: (suggestion) => vehicleLabels[suggestion.vehicle_type] ?? suggestion.vehicle_type,
+      render: (suggestion) =>
+        SUGGESTION_VEHICLE_LABELS[suggestion.vehicle_type] ?? suggestion.vehicle_type,
     },
     {
       key: 'start',

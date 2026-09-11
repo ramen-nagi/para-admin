@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import DataTable from '../../components/DataTable'
+import { VEHICLE_TYPE_LABELS } from '../../constants/vehicleTypes'
 import PageHeader from '../../components/PageHeader'
 import SidePanel from '../../components/SidePanel'
 import AdminLayout from '../../layouts/AdminLayout'
@@ -107,7 +108,7 @@ function FareForm({ fare, onClose, onSaved }) {
             >
               {VEHICLE_TYPES.map((type) => (
                 <option key={type} value={type}>
-                  {type}
+                  {type} - {VEHICLE_TYPE_LABELS[type]}
                 </option>
               ))}
             </select>
@@ -235,7 +236,11 @@ function FareMatrixPage({ userEmail, onSignOut, onTabChange }) {
     {
       key: 'vehicle_type',
       label: 'Vehicle',
-      render: (fare) => <strong>{fare.vehicle_type}</strong>,
+      render: (fare) => (
+        <strong>
+          {fare.vehicle_type} - {VEHICLE_TYPE_LABELS[fare.vehicle_type] ?? 'Unknown'}
+        </strong>
+      ),
     },
     { key: 'fare_type', label: 'Type' },
     {
