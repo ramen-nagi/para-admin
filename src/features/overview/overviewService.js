@@ -4,6 +4,7 @@ import { TRAIN_LINES } from '../train-fares/trainLineConfig'
 
 const REPORT_ATTENTION_STATUSES = ['open', 'under_review']
 const SUGGESTION_ATTENTION_STATUSES = ['pending', 'under_review']
+const TRAIN_FARE_PAGE_SIZE = 1000
 
 function countExpectedTrainFares() {
   const expected = new Set()
@@ -50,15 +51,24 @@ async function getDistanceFareCount() {
 }
 
 async function getTrainFareCompletion() {
-  const { data, error } = await supabase
-    .from('train_fares')
-    .select('trip_id, origin_stop_id, destination_stop_id, fare_type')
+  const fares = []
 
-  if (error) return { count: 0, error }
+  for (let start = 0; ; start += TRAIN_FARE_PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from('train_fares')
+      .select('fare_id, trip_id, origin_stop_id, destination_stop_id, fare_type')
+      .order('fare_id', { ascending: true })
+      .range(start, start + TRAIN_FARE_PAGE_SIZE - 1)
+
+    if (error) return { count: 0, error }
+
+    fares.push(...(data ?? []))
+    if (!data || data.length < TRAIN_FARE_PAGE_SIZE) break
+  }
 
   const expected = countExpectedTrainFares()
   const configured = new Set(
-    (data ?? []).map(
+    fares.map(
       (fare) =>
         `${fare.trip_id}:${fare.origin_stop_id}:${fare.destination_stop_id}:${fare.fare_type ?? 'STANDARD'}`,
     ),
