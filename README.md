@@ -1,5 +1,7 @@
 Dedicated Admin Website for PARA
 
+Staff roles and account management: [setup and permissions](docs/staff-access.md).
+
 Features:
 1. Admin authentication
 2. Read, update reports from the supabase reports table

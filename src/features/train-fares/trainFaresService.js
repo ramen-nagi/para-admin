@@ -1,4 +1,7 @@
 import { supabase } from '../../lib/supabase'
+import { deleteRecord } from '../../lib/crud'
+
+export const deleteTrainFare = (id) => deleteRecord(supabase, 'train_fares', 'fare_id', id)
 
 export async function getStopsByIds(stopIds) {
   const { data, error } = await supabase

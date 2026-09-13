@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
+import ReportCreateForm from './ReportCreateForm'
+import useUnsavedChanges, { canLeaveEditor } from '../../hooks/useUnsavedChanges'
 import DataTable from '../../components/DataTable'
+import DeleteButton from '../../components/DeleteButton'
 import { VEHICLE_TYPE_LABELS } from '../../constants/vehicleTypes'
 import PageHeader from '../../components/PageHeader'
 import SidePanel from '../../components/SidePanel'
@@ -7,7 +10,7 @@ import StatusSummary from '../../components/StatusSummary'
 import TableFilters from '../../components/TableFilters'
 import useTableFilters from '../../hooks/useTableFilters'
 import AdminLayout from '../../layouts/AdminLayout'
-import { getReports, updateReport } from './reportsService'
+import { deleteReport, getReports, updateReport } from './reportsService'
 
 const categoryLabels = {
   route_nonexistent: 'Route does not exist',
@@ -38,15 +41,19 @@ function formatFare(value) {
   return value == null ? '—' : `₱${Number(value).toFixed(2)}`
 }
 
-function ReportDetails({ report, onClose, onUpdated }) {
+function ReportDetails({ report, onClose, onUpdated, onDeleted }) {
+  const [category, setCategory] = useState(report.category)
+  const [description, setDescription] = useState(report.description)
   const [status, setStatus] = useState(report.status)
   const [adminNotes, setAdminNotes] = useState(report.admin_notes ?? '')
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
   const [saved, setSaved] = useState(false)
+  useUnsavedChanges(status !== report.status || adminNotes !== (report.admin_notes ?? '') || category !== report.category || description !== report.description, saving)
 
   async function handleSave(event) {
     event.preventDefault()
+    if (!description.trim()) return setSaveError('Enter a description.')
     setSaving(true)
     setSaveError('')
     setSaved(false)
@@ -59,6 +66,8 @@ function ReportDetails({ report, onClose, onUpdated }) {
         : null
     const result = await updateReport(report.id, {
       status,
+      category,
+      description: description.trim(),
       adminNotes,
       resolvedAt,
     })
@@ -83,7 +92,8 @@ function ReportDetails({ report, onClose, onUpdated }) {
           className="close-button"
           type="button"
           aria-label="Close report details"
-          onClick={onClose}
+          onClick={() => { if (canLeaveEditor()) onClose() }}
+          disabled={saving}
         >
           ×
         </button>
@@ -116,6 +126,9 @@ function ReportDetails({ report, onClose, onUpdated }) {
         <DetailField label="Resolved at" value={formatDate(report.resolved_at)} />
       </div>
       <form className="edit-section" onSubmit={handleSave}>
+        <fieldset className="form-fields" disabled={saving}>
+        <div className="edit-field"><label htmlFor="report-category">Category</label><select id="report-category" value={category} onChange={(event) => setCategory(event.target.value)}>{Object.entries(categoryLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></div>
+        <div className="edit-field"><label htmlFor="report-description">Description</label><textarea id="report-description" required maxLength={5000} rows={4} value={description} onChange={(event) => setDescription(event.target.value)} /></div>
         <div className="edit-field">
           <label htmlFor="report-status">Status</label>
           <select
@@ -153,7 +166,14 @@ function ReportDetails({ report, onClose, onUpdated }) {
         <button className="primary-button" type="submit" disabled={saving}>
           {saving ? 'Saving…' : 'Save changes'}
         </button>
+        </fieldset>
       </form>
+      <div className="delete-section">
+        <h3>Remove report</h3>
+        <p>Use for spam or invalid submissions. Keep resolved reports for reference.</p>
+        <DeleteButton label={`${categoryLabels[report.category] ?? report.category} · Report ${report.id}`}
+          disabled={saving} onDelete={() => deleteReport(report.id)} onDeleted={onDeleted} />
+      </div>
     </section>
   )
 }
@@ -170,8 +190,10 @@ function DetailField({ label, value }) {
 function ReportsPage({ userEmail, onSignOut, onTabChange }) {
   const [reports, setReports] = useState([])
   const [selectedReport, setSelectedReport] = useState(null)
+  const [creating, setCreating] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
   const loadReports = useCallback(async () => {
     setLoading(true)
     setError('')
@@ -188,6 +210,8 @@ function ReportsPage({ userEmail, onSignOut, onTabChange }) {
   }, [loadReports])
 
   const {
+    search,
+    setSearch,
     statusFilter,
     setStatusFilter,
     fromDate,
@@ -239,15 +263,21 @@ function ReportsPage({ userEmail, onSignOut, onTabChange }) {
       editorPanel={
         <SidePanel
           title="Report details"
-          isEmpty={!selectedReport}
+          isEmpty={!selectedReport && !creating}
           emptyMessage="Select a report to view and edit its details."
         >
+          {creating && <ReportCreateForm categories={categoryLabels} onClose={() => setCreating(false)} onSaved={(report) => { setReports((current) => [report, ...current]); setCreating(false); setNotice('Report created successfully.') }} />}
           {selectedReport && (
             <ReportDetails
               key={`${selectedReport.id}-${selectedReport.updated_at}`}
               report={selectedReport}
               onClose={() => setSelectedReport(null)}
               onUpdated={handleReportUpdated}
+              onDeleted={() => {
+                setReports((current) => current.filter((report) => report.id !== selectedReport.id))
+                setSelectedReport(null)
+                setNotice('Report deleted successfully.')
+              }}
             />
           )}
         </SidePanel>
@@ -257,6 +287,7 @@ function ReportsPage({ userEmail, onSignOut, onTabChange }) {
         title="Reports"
         subtitle="Review feedback submitted by commuters across Metro Manila."
       >
+        <button className="primary-button compact" type="button" onClick={() => { if (canLeaveEditor()) { setSelectedReport(null); setCreating(true) } }}>Add report</button>
         <StatusSummary
           rows={filteredReports}
           statuses={[
@@ -265,7 +296,10 @@ function ReportsPage({ userEmail, onSignOut, onTabChange }) {
           ]}
         />
       </PageHeader>
+      {notice && <p className="success-message page-notice" role="status">{notice}</p>}
       <TableFilters
+        search={search}
+        onSearchChange={setSearch}
         ariaLabel="Report filters"
         statusOptions={[
           { value: 'all', label: 'All statuses' },
@@ -302,16 +336,17 @@ function ReportsPage({ userEmail, onSignOut, onTabChange }) {
       {!loading && !error && reports.length > 0 && filteredReports.length === 0 && (
         <div className="state-card">
           <h2>No matching reports</h2>
-          <p>Try changing the status or date range.</p>
+          <p>Try changing the search, status, or date range.</p>
         </div>
       )}
       {!loading && !error && filteredReports.length > 0 && (
         <DataTable
+          selectedKey={selectedReport?.id}
           caption={`Showing ${filteredReports.length} of ${reports.length} reports`}
           columns={reportColumns}
           rows={filteredReports}
           getRowKey={(report) => report.id}
-          onRowClick={setSelectedReport}
+          onRowClick={(report) => { if (canLeaveEditor()) { setCreating(false); setSelectedReport(report) } }}
         />
       )}
     </AdminLayout>

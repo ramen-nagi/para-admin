@@ -7,6 +7,7 @@ export default function useTableFilters(
   const [statusFilter, setStatusFilter] = useState('all')
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
+  const [search, setSearch] = useState('')
 
   const filteredRows = useMemo(
     () =>
@@ -16,18 +17,22 @@ export default function useTableFilters(
         const matchesFrom = !fromDate || rowDate >= new Date(`${fromDate}T00:00:00`)
         const matchesTo = !toDate || rowDate <= new Date(`${toDate}T23:59:59.999`)
 
-        return matchesStatus && matchesFrom && matchesTo
+        const matchesSearch = !search.trim() || Object.values(row).some((value) => String(value ?? '').toLowerCase().replaceAll('_', ' ').includes(search.trim().toLowerCase().replaceAll('_', ' ')))
+        return matchesStatus && matchesFrom && matchesTo && matchesSearch
       }),
-    [dateField, fromDate, rows, statusField, statusFilter, toDate],
+    [dateField, fromDate, rows, statusField, statusFilter, toDate, search],
   )
 
   function clearFilters() {
     setStatusFilter('all')
     setFromDate('')
     setToDate('')
+    setSearch('')
   }
 
   return {
+    search,
+    setSearch,
     statusFilter,
     setStatusFilter,
     fromDate,
@@ -36,6 +41,6 @@ export default function useTableFilters(
     setToDate,
     filteredRows,
     clearFilters,
-    hasActiveFilters: statusFilter !== 'all' || Boolean(fromDate) || Boolean(toDate),
+    hasActiveFilters: statusFilter !== 'all' || Boolean(fromDate) || Boolean(toDate) || Boolean(search),
   }
 }

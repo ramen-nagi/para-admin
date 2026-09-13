@@ -1,5 +1,8 @@
 import { DISTANCE_FARE_VEHICLE_TYPES } from '../../constants/vehicleTypes'
 import { supabase } from '../../lib/supabase'
+import { deleteRecord } from '../../lib/crud'
+
+export const deleteFare = (id) => deleteRecord(supabase, 'distance_fares', 'fare_id', id)
 
 export const VEHICLE_TYPES = DISTANCE_FARE_VEHICLE_TYPES
 export const FARE_TYPES = ['STANDARD', 'DISCOUNTED']
