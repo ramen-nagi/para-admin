@@ -69,7 +69,7 @@ function AdminLayout({ userEmail, onSignOut, activeTab, onTabChange, children, e
               type="button"
               onClick={() => onTabChange?.('accounts')}
             >
-              Account Management
+              User Management
             </button>
           )}
           {(role === 'admin' || role === 'editor') && (

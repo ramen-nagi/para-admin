@@ -1,0 +1,4 @@
+[functions.manage-staff]
+# The handler validates the access token with Auth getUser and checks the current DB role.
+# This supports both legacy and asymmetric Supabase signing keys.
+verify_jwt = false

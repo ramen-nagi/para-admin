@@ -4,6 +4,7 @@ import { canLeaveEditor } from './hooks/useUnsavedChanges'
 import AuthLayout from './layouts/AuthLayout'
 import AdminLayout from './layouts/AdminLayout'
 import LoginPage from './features/auth/LoginPage'
+import PasswordPage from './features/auth/PasswordPage'
 import OverviewPage from './features/overview/OverviewPage'
 import ReportsPage from './features/reports/ReportsPage'
 import FareMatrixPage from './features/fares/FareMatrixPage'
@@ -140,15 +141,23 @@ function StaffWorkspace({ session, onSignOut }) {
 }
 
 function App() {
+  const [passwordFlow, setPasswordFlow] = useState(
+    () =>
+      new URLSearchParams(window.location.search).get('account') === 'password' ||
+      ['recovery', 'invite'].includes(
+        new URLSearchParams(window.location.hash.slice(1)).get('type'),
+      ),
+  )
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   useEffect(() => {
     let mounted = true
     let authChanged = false
-    const unsubscribe = subscribeToAuthChanges((currentSession) => {
+    const unsubscribe = subscribeToAuthChanges((currentSession, event) => {
       authChanged = true
       if (mounted) {
+        if (event === 'PASSWORD_RECOVERY') setPasswordFlow(true)
         setSession(currentSession)
         setLoading(false)
       }
@@ -188,6 +197,21 @@ function App() {
       <AuthLayout>
         <p className="loading">Loading...</p>
       </AuthLayout>
+    )
+  if (passwordFlow)
+    return (
+      <PasswordPage
+        authError={error}
+        session={session}
+        onSignOut={handleSignOut}
+        onDone={() => {
+          const next = new URL(window.location.href)
+          next.searchParams.delete('account')
+          next.hash = ''
+          window.history.replaceState(null, '', next)
+          setPasswordFlow(false)
+        }}
+      />
     )
   return (
     <>
