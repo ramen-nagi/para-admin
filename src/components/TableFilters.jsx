@@ -1,5 +1,7 @@
 function TableFilters({
   ariaLabel,
+  search,
+  onSearchChange,
   statusOptions,
   statusValue,
   onStatusChange,
@@ -14,6 +16,7 @@ function TableFilters({
 
   return (
     <section className="filters-card" aria-label={ariaLabel}>
+      {onSearchChange && <div className="filter-field search-field"><label htmlFor={`${idPrefix}-search`}>Search</label><input id={`${idPrefix}-search`} type="search" placeholder="Search records…" value={search} onChange={(event) => onSearchChange(event.target.value)} /></div>}
       <div className="filter-field">
         <label htmlFor={`${idPrefix}-status`}>Status</label>
         <select

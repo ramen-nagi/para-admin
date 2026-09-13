@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
+import useUnsavedChanges, { canLeaveEditor } from '../../hooks/useUnsavedChanges'
 import DataTable from '../../components/DataTable'
+import DeleteButton from '../../components/DeleteButton'
 import { VEHICLE_TYPE_LABELS } from '../../constants/vehicleTypes'
 import PageHeader from '../../components/PageHeader'
 import SidePanel from '../../components/SidePanel'
 import AdminLayout from '../../layouts/AdminLayout'
-import { createFare, FARE_TYPES, getFareMatrix, updateFare, VEHICLE_TYPES } from './faresService'
+import { createFare, deleteFare, FARE_TYPES, getFareMatrix, updateFare, VEHICLE_TYPES } from './faresService'
 
 const emptyForm = {
   vehicle_type: '1',
@@ -32,6 +34,9 @@ function FareForm({ fare, onClose, onSaved }) {
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const isEditing = Boolean(fare)
+  const dirty = Object.keys(emptyForm).some((key) => String(form[key] ?? '') !== String(fare?.[key] ?? emptyForm[key]))
+  useUnsavedChanges(dirty, saving)
+  function close() { if (canLeaveEditor()) onClose() }
 
   function updateField(event) {
     setForm((current) => ({
@@ -92,11 +97,12 @@ function FareForm({ fare, onClose, onSaved }) {
           <p className="eyebrow">Fare matrix</p>
           <h2 id="fare-form-title">{isEditing ? 'Edit fare' : 'Add fare'}</h2>
         </div>
-        <button className="close-button" type="button" aria-label="Close form" onClick={onClose}>
+        <button className="close-button" type="button" aria-label="Close form" onClick={close} disabled={saving}>
           ×
         </button>
       </div>
       <form className="fare-form" onSubmit={handleSubmit}>
+        <fieldset className="form-fields" disabled={saving}>
         <div className="form-grid">
           <div className="edit-field">
             <label htmlFor="vehicle_type">Vehicle type</label>
@@ -188,13 +194,14 @@ function FareForm({ fare, onClose, onSaved }) {
           </p>
         )}
         <div className="form-actions">
-          <button className="secondary-button compact" type="button" onClick={onClose}>
+          <button className="secondary-button compact" type="button" onClick={close} disabled={saving}>
             Cancel
           </button>
           <button className="primary-button compact" type="submit" disabled={saving}>
             {saving ? 'Saving…' : 'Save fare'}
           </button>
         </div>
+        </fieldset>
       </form>
     </section>
   )
@@ -205,7 +212,8 @@ function FareMatrixPage({ userEmail, onSignOut, onTabChange }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [editingFare, setEditingFare] = useState(null)
-  void onTabChange
+  const [editorOpen, setEditorOpen] = useState(false)
+  const [notice, setNotice] = useState('')
 
   const loadFares = useCallback(async () => {
     setLoading(true)
@@ -230,6 +238,8 @@ function FareMatrixPage({ userEmail, onSignOut, onTabChange }) {
           )
     })
     setEditingFare(null)
+    setEditorOpen(false)
+    setNotice('Fare saved successfully.')
   }
 
   const fareColumns = [
@@ -268,15 +278,25 @@ function FareMatrixPage({ userEmail, onSignOut, onTabChange }) {
       key: 'actions',
       label: '',
       render: (fare) => (
+        <div className="row-actions">
         <button
           className="table-action"
           type="button"
           onClick={() => {
+            if (!canLeaveEditor()) return
             setEditingFare(fare)
+            setEditorOpen(true)
           }}
         >
           Edit
         </button>
+        <DeleteButton label={`${VEHICLE_TYPE_LABELS[fare.vehicle_type]} · ${fare.fare_type} · Fare #${fare.fare_id}`}
+          onDelete={() => deleteFare(fare.fare_id)} onDeleted={() => {
+            setFares((current) => current.filter((item) => item.fare_id !== fare.fare_id))
+            if (editingFare?.fare_id === fare.fare_id) { setEditingFare(null); setEditorOpen(false) }
+            setNotice('Fare deleted successfully.')
+          }} />
+        </div>
       ),
     },
   ]
@@ -286,12 +306,14 @@ function FareMatrixPage({ userEmail, onSignOut, onTabChange }) {
       userEmail={userEmail}
       onSignOut={onSignOut}
       activeTab="fares"
+      onTabChange={onTabChange}
       editorPanel={
+        editorOpen &&
         <SidePanel title="Fare editor">
           <FareForm
             key={editingFare?.fare_id ?? 'new-fare'}
             fare={editingFare}
-            onClose={() => setEditingFare(null)}
+            onClose={() => { setEditingFare(null); setEditorOpen(false) }}
             onSaved={handleSaved}
           />
         </SidePanel>
@@ -302,12 +324,15 @@ function FareMatrixPage({ userEmail, onSignOut, onTabChange }) {
           className="primary-button add-button"
           type="button"
           onClick={() => {
+            if (!canLeaveEditor()) return
             setEditingFare(null)
+            setEditorOpen(true)
           }}
         >
           Add fare
         </button>
       </PageHeader>
+      {notice && <p className="success-message page-notice" role="status">{notice}</p>}
       {loading && (
         <div className="state-card">
           <p>Loading fares…</p>
@@ -328,7 +353,7 @@ function FareMatrixPage({ userEmail, onSignOut, onTabChange }) {
         </div>
       )}
       {!loading && !error && fares.length > 0 && (
-        <DataTable columns={fareColumns} rows={fares} getRowKey={(fare) => fare.fare_id} />
+        <DataTable selectedKey={editingFare?.fare_id} columns={fareColumns} rows={fares} getRowKey={(fare) => fare.fare_id} />
       )}
     </AdminLayout>
   )
