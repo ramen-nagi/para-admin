@@ -6,7 +6,7 @@ function PageHeader({ title, subtitle, eyebrow = 'Para Admin', children }) {
         <h1>{title}</h1>
         {subtitle && <p className="page-subtitle">{subtitle}</p>}
       </div>
-      {children}
+      {children && <div className="page-header-actions">{children}</div>}
     </header>
   )
 }

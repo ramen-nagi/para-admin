@@ -1,4 +1,11 @@
 import { supabase } from '../../lib/supabase'
+import { STAFF_ROLES } from './permissions'
+
+export async function getStaffRole() {
+  const { data, error } = await supabase.rpc('current_staff_role')
+  if (error) throw error
+  return STAFF_ROLES.includes(data) ? data : null
+}
 
 export async function getCurrentSession() {
   const { data, error } = await supabase.auth.getSession()
@@ -8,33 +15,22 @@ export async function getCurrentSession() {
 export function subscribeToAuthChanges(callback) {
   const {
     data: { subscription },
-  } = supabase.auth.onAuthStateChange((_event, session) => callback(session))
+  } = supabase.auth.onAuthStateChange((event, session) => callback(session, event))
 
   return () => subscription.unsubscribe()
 }
 
-export async function signInAsAdmin(email, password) {
+export async function signIn(email, password) {
   const { data, error: signInError } = await supabase.auth.signInWithPassword({
     email,
     password,
   })
 
   if (signInError) {
-    return { session: null, error: signInError, isAdmin: false }
+    return { session: null, error: signInError }
   }
 
-  const { data: adminUser, error: adminError } = await supabase
-    .from('admin_users')
-    .select('user_id')
-    .eq('user_id', data.user.id)
-    .maybeSingle()
-
-  if (adminError || !adminUser) {
-    await supabase.auth.signOut()
-    return { session: null, error: adminError, isAdmin: false }
-  }
-
-  return { session: data.session, error: null, isAdmin: true }
+  return { session: data.session, error: null }
 }
 
 export async function signOut() {

@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
+import { canLeaveEditor } from '../../hooks/useUnsavedChanges'
+import SuggestionForm from './SuggestionForm'
 import DataTable from '../../components/DataTable'
 import { SUGGESTION_VEHICLE_LABELS } from '../../constants/vehicleTypes'
 import PageHeader from '../../components/PageHeader'
@@ -10,7 +12,6 @@ import AdminLayout from '../../layouts/AdminLayout'
 import {
   getRouteSuggestions,
   SUGGESTION_STATUSES,
-  updateRouteSuggestionStatus,
 } from './routeSuggestionsService'
 
 function formatDate(value) {
@@ -21,116 +22,16 @@ function formatDate(value) {
     : '—'
 }
 
-function SuggestionDetails({ suggestion, onClose, onUpdated }) {
-  const [status, setStatus] = useState(suggestion.status)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
-  const [saved, setSaved] = useState(false)
-
-  async function handleSave(event) {
-    event.preventDefault()
-    setSaving(true)
-    setError('')
-    setSaved(false)
-    const result = await updateRouteSuggestionStatus(suggestion.id, status)
-    if (result.error) setError('The route suggestion status could not be updated.')
-    else {
-      onUpdated(result.suggestion)
-      setSaved(true)
-    }
-    setSaving(false)
-  }
-
-  return (
-    <section className="side-panel-content" aria-labelledby="suggestion-title">
-      <div className="detail-header">
-        <div>
-          <p className="eyebrow">Route suggestion</p>
-          <h2 id="suggestion-title">{suggestion.route_name}</h2>
-        </div>
-        <button className="close-button" type="button" aria-label="Close details" onClick={onClose}>
-          ×
-        </button>
-      </div>
-      <div className="detail-status">
-        <span className={`status-badge ${suggestion.status}`}>
-          {SUGGESTION_STATUSES[suggestion.status]}
-        </span>
-        <span>{formatDate(suggestion.created_at)}</span>
-      </div>
-      <div className="detail-grid">
-        <div className="detail-field">
-          <dt>Vehicle type</dt>
-          <dd>{SUGGESTION_VEHICLE_LABELS[suggestion.vehicle_type] ?? suggestion.vehicle_type}</dd>
-        </div>
-        <div className="detail-field">
-          <dt>Reporter ID</dt>
-          <dd>{suggestion.reporter_id || '—'}</dd>
-        </div>
-        <div className="detail-field">
-          <dt>Start coordinates</dt>
-          <dd>
-            {suggestion.start_latitude}, {suggestion.start_longitude}
-          </dd>
-        </div>
-        <div className="detail-field">
-          <dt>End coordinates</dt>
-          <dd>
-            {suggestion.end_latitude}, {suggestion.end_longitude}
-          </dd>
-        </div>
-      </div>
-      {suggestion.roads_traversed && (
-        <div className="detail-section">
-          <h3>Roads traversed</h3>
-          <p className="report-description">{suggestion.roads_traversed}</p>
-        </div>
-      )}
-      {suggestion.notes && (
-        <div className="detail-section">
-          <h3>Notes</h3>
-          <p className="report-description">{suggestion.notes}</p>
-        </div>
-      )}
-      <form className="edit-section" onSubmit={handleSave}>
-        <div className="edit-field">
-          <label htmlFor="suggestion-status">Status</label>
-          <select
-            id="suggestion-status"
-            value={status}
-            onChange={(event) => setStatus(event.target.value)}
-          >
-            {Object.entries(SUGGESTION_STATUSES).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </div>
-        {error && (
-          <p className="error-message" role="alert">
-            {error}
-          </p>
-        )}
-        {saved && (
-          <p className="success-message" role="status">
-            Suggestion status updated successfully.
-          </p>
-        )}
-        <button className="primary-button" type="submit" disabled={saving}>
-          {saving ? 'Saving…' : 'Save status'}
-        </button>
-      </form>
-    </section>
-  )
-}
-
 function RouteSuggestionsPage({ userEmail, onSignOut, onTabChange }) {
   const [suggestions, setSuggestions] = useState([])
   const [selectedSuggestion, setSelectedSuggestion] = useState(null)
+  const [creating, setCreating] = useState(false)
+  const [notice, setNotice] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const {
+    search,
+    setSearch,
     statusFilter,
     setStatusFilter,
     fromDate,
@@ -162,13 +63,13 @@ function RouteSuggestionsPage({ userEmail, onSignOut, onTabChange }) {
     return () => clearTimeout(timer)
   }, [loadSuggestions])
 
-  function handleUpdated(updatedSuggestion) {
-    setSuggestions((current) =>
-      current.map((suggestion) =>
-        suggestion.id === updatedSuggestion.id ? updatedSuggestion : suggestion,
-      ),
-    )
-    setSelectedSuggestion(updatedSuggestion)
+  function handleUpdated(saved) {
+    setSuggestions((current) => current.some((item) => item.id === saved.id)
+      ? current.map((item) => item.id === saved.id ? saved : item)
+      : [saved, ...current])
+    setSelectedSuggestion(null)
+    setCreating(false)
+    setNotice('Suggestion saved successfully.')
   }
 
   const suggestionColumns = [
@@ -218,21 +119,27 @@ function RouteSuggestionsPage({ userEmail, onSignOut, onTabChange }) {
       editorPanel={
         <SidePanel
           title="Route suggestion"
-          isEmpty={!selectedSuggestion}
+          isEmpty={!selectedSuggestion && !creating}
           emptyMessage="Select a route suggestion to view and update its status."
         >
-          {selectedSuggestion && (
-            <SuggestionDetails
-              key={selectedSuggestion.id}
+          {(selectedSuggestion || creating) && (
+            <SuggestionForm
+              key={selectedSuggestion?.id ?? 'new'}
               suggestion={selectedSuggestion}
-              onClose={() => setSelectedSuggestion(null)}
-              onUpdated={handleUpdated}
+              onClose={() => { setSelectedSuggestion(null); setCreating(false) }}
+              onSaved={handleUpdated}
+              onDeleted={() => {
+                setSuggestions((current) => current.filter((item) => item.id !== selectedSuggestion.id))
+                setSelectedSuggestion(null)
+                setNotice('Suggestion deleted successfully.')
+              }}
             />
           )}
         </SidePanel>
       }
     >
       <PageHeader title="Route Suggestions" subtitle="Review routes suggested by commuters.">
+        <button className="primary-button compact" type="button" onClick={() => { if (canLeaveEditor()) { setSelectedSuggestion(null); setCreating(true) } }}>Add suggestion</button>
         <StatusSummary
           rows={filteredSuggestions}
           statuses={[
@@ -241,7 +148,10 @@ function RouteSuggestionsPage({ userEmail, onSignOut, onTabChange }) {
           ]}
         />
       </PageHeader>
+      {notice && <p className="success-message page-notice" role="status">{notice}</p>}
       <TableFilters
+        search={search}
+        onSearchChange={setSearch}
         ariaLabel="Route suggestion filters"
         statusOptions={statusOptions}
         statusValue={statusFilter}
@@ -275,16 +185,17 @@ function RouteSuggestionsPage({ userEmail, onSignOut, onTabChange }) {
       {!loading && !error && suggestions.length > 0 && filteredSuggestions.length === 0 && (
         <div className="state-card">
           <h2>No matching route suggestions</h2>
-          <p>Try changing the status or date range.</p>
+          <p>Try changing the search, status, or date range.</p>
         </div>
       )}
       {!loading && !error && filteredSuggestions.length > 0 && (
         <DataTable
+          selectedKey={selectedSuggestion?.id}
           caption={`Showing ${filteredSuggestions.length} of ${suggestions.length} route suggestions`}
           columns={suggestionColumns}
           rows={filteredSuggestions}
           getRowKey={(suggestion) => suggestion.id}
-          onRowClick={setSelectedSuggestion}
+          onRowClick={(suggestion) => { if (canLeaveEditor()) { setCreating(false); setSelectedSuggestion(suggestion) } }}
         />
       )}
     </AdminLayout>

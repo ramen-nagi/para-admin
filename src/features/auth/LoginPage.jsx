@@ -1,35 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import AuthLayout from '../../layouts/AuthLayout'
-import { getCurrentSession, signInAsAdmin, subscribeToAuthChanges } from './authService'
+import { signIn } from './authService'
 
 function LoginPage({ onSignedIn }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
-
-  useEffect(() => {
-    let mounted = true
-
-    getCurrentSession().then(() => {
-      if (mounted) {
-        setLoading(false)
-      }
-    })
-
-    const unsubscribe = subscribeToAuthChanges((currentSession) => {
-      if (currentSession) {
-        console.info('[Para Admin] Signed in:', currentSession.user.email)
-      }
-      if (currentSession) onSignedIn(currentSession)
-    })
-
-    return () => {
-      mounted = false
-      unsubscribe()
-    }
-  }, [onSignedIn])
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -41,29 +18,18 @@ function LoginPage({ onSignedIn }) {
     }
 
     setSubmitting(true)
-    const {
-      session: authenticatedSession,
-      error: signInError,
-      isAdmin,
-    } = await signInAsAdmin(email.trim(), password)
+    const { session: authenticatedSession, error: signInError } = await signIn(
+      email.trim(),
+      password,
+    )
 
     if (signInError) {
       setError('Unable to sign in with those credentials.')
-    } else if (!isAdmin) {
-      setError('This account does not have administrator access.')
     } else {
       onSignedIn(authenticatedSession)
     }
 
     setSubmitting(false)
-  }
-
-  if (loading) {
-    return (
-      <AuthLayout>
-        <p className="loading">Loading…</p>
-      </AuthLayout>
-    )
   }
 
   return (
@@ -74,7 +40,7 @@ function LoginPage({ onSignedIn }) {
         </div>
         <p className="eyebrow">Para Admin</p>
         <h1 id="signin-title">Welcome back</h1>
-        <p className="subtitle">Sign in to manage your administrator workspace.</p>
+        <p className="subtitle">Sign in to your staff workspace.</p>
         <form onSubmit={handleSubmit} noValidate>
           <div className="field-group">
             <label htmlFor="email">Email address</label>

@@ -1,0 +1,126 @@
+.staff-role {
+  text-transform: capitalize;
+}
+.account-mode,
+.account-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.account-mode {
+  margin-bottom: 20px;
+}
+.account-status {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  font-size: 13px;
+}
+.account-status.active {
+  background: #e9f6ed;
+  color: #21623a;
+}
+.account-status.pending {
+  background: #fff4d5;
+  color: #725514;
+}
+.account-status.disabled {
+  background: #f1f2f4;
+  color: #616773;
+}
+.account-search select {
+  padding: 10px;
+  border: 1px solid #cbd5ce;
+  border-radius: 8px;
+  background: white;
+  font: inherit;
+}
+.account-role-guide {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.account-role-guide p,
+.account-access-form {
+  margin: 0;
+  padding: 20px;
+  background: white;
+  border: 1px solid #e2e8e4;
+  border-radius: 12px;
+}
+.account-role-guide strong,
+.account-role-guide span {
+  display: block;
+}
+.account-role-guide span {
+  margin-top: 6px;
+  color: #52635b;
+  font-size: 14px;
+}
+.account-access-form {
+  margin-bottom: 24px;
+}
+.account-access-form h2 {
+  margin-top: 0;
+}
+.account-access-form p {
+  color: #52635b;
+  font-size: 14px;
+}
+.account-form-fields {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 16px;
+}
+.account-form-fields select,
+.account-search input {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid #cbd5ce;
+  border-radius: 8px;
+  padding: 10px;
+  font: inherit;
+  background: white;
+}
+.account-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.managed-user-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.managed-user-id {
+  color: #67727d;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.account-status.suspended {
+  background: #fde8e8;
+  color: #9c2929;
+}
+.user-management-help {
+  margin-bottom: 24px;
+  color: #52635b;
+}
+.account-search label {
+  white-space: nowrap;
+}
+.account-search input {
+  max-width: 360px;
+}
+@media (max-width: 800px) {
+  .account-role-guide,
+  .account-form-fields {
+    grid-template-columns: 1fr;
+  }
+  .account-search {
+    flex-wrap: wrap;
+  }
+}

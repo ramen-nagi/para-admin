@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
+import useUnsavedChanges, { canLeaveEditor } from '../../hooks/useUnsavedChanges'
+import DeleteButton from '../../components/DeleteButton'
+import { planFareChanges } from './fareChanges'
 import DataTable from '../../components/DataTable'
 import PageHeader from '../../components/PageHeader'
 import AdminLayout from '../../layouts/AdminLayout'
 import {
   createTrainFares,
+  deleteTrainFare,
   getStopsByIds,
   getTrainFaresForRoute,
   updateTrainFare,
@@ -28,6 +32,7 @@ function TrainFarePage({ userEmail, onSignOut, onTabChange }) {
   const [loadingFares, setLoadingFares] = useState(false)
   const [routeLoaded, setRouteLoaded] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
@@ -44,6 +49,9 @@ function TrainFarePage({ userEmail, onSignOut, onTabChange }) {
       ? line.southWestTripId
       : line.northEastTripId
     : ''
+
+  const pendingChanges = planFareChanges({ fares, destinationStopIds: downstreamStopIds, standardValues, discountedValues, originStopId, tripId })
+  useUnsavedChanges(routeLoaded && Boolean(pendingChanges.error || pendingChanges.inserts?.length || pendingChanges.updates?.length), saving || deleting || loadingFares)
 
   useEffect(() => {
     let active = true
@@ -65,6 +73,7 @@ function TrainFarePage({ userEmail, onSignOut, onTabChange }) {
   }, [line])
 
   function handleLineChange(value) {
+    if (!canLeaveEditor()) return
     setLineName(value)
     setDirection('')
     setOriginStopId('')
@@ -77,6 +86,7 @@ function TrainFarePage({ userEmail, onSignOut, onTabChange }) {
   }
 
   function handleDirectionChange(value) {
+    if (!canLeaveEditor()) return
     setDirection(value)
     setOriginStopId('')
     setFares([])
@@ -87,6 +97,7 @@ function TrainFarePage({ userEmail, onSignOut, onTabChange }) {
   }
 
   async function loadRouteFares() {
+    if (!canLeaveEditor()) return
     if (!tripId || !originStopId || downstreamStopIds.length === 0) return
     setLoadingFares(true)
     setError('')
@@ -125,53 +136,39 @@ function TrainFarePage({ userEmail, onSignOut, onTabChange }) {
   async function saveFares() {
     setError('')
     setSuccess('')
-    const values = [standardValues, discountedValues]
-    const incomplete = downstreamStopIds.some((stopId) =>
-      values.some((group) => group[stopId] === undefined || group[stopId] === ''),
-    )
-    const invalid = downstreamStopIds.some((stopId) =>
-      values.some((group) => !Number.isFinite(Number(group[stopId])) || Number(group[stopId]) < 0),
-    )
-    if (incomplete || invalid) {
-      setError('Enter valid STANDARD and DISCOUNTED fares for every downstream destination.')
-      return
-    }
-
+    const plan = planFareChanges({ fares, destinationStopIds: downstreamStopIds, standardValues, discountedValues, originStopId, tripId })
+    if (plan.error) return setError(plan.error)
+    if (!plan.inserts.length && !plan.updates.length) return setSuccess('No changes to save.')
     setSaving(true)
-    const existing = new Map(
-      fares.map((fare) => [`${fare.destination_stop_id}:${fare.fare_type ?? 'STANDARD'}`, fare]),
-    )
-    const inserts = []
-    const updates = []
-    downstreamStopIds.forEach((destinationStopId) => {
-      ;[
-        ['STANDARD', standardValues],
-        ['DISCOUNTED', discountedValues],
-      ].forEach(([fareType, group]) => {
-        const key = `${destinationStopId}:${fareType}`
-        const fare = Number(group[destinationStopId])
-        if (existing.has(key)) updates.push(updateTrainFare(existing.get(key).fare_id, { fare }))
-        else
-          inserts.push({
-            origin_stop_id: originStopId,
-            destination_stop_id: destinationStopId,
-            fare_type: fareType,
-            fare,
-            trip_id: tripId,
-          })
-      })
-    })
-    const [insertResult, ...updateResults] = await Promise.all([
-      inserts.length ? createTrainFares(inserts) : Promise.resolve({ error: null }),
-      ...updates,
-    ])
-    if (insertResult.error || updateResults.some((result) => result.error))
-      setError('Some fares could not be saved. Your entered values were kept.')
-    else {
-      await loadRouteFares()
-      setSuccess('STANDARD and DISCOUNTED fares saved successfully.')
-    }
-    setSaving(false)
+    try {
+      const results = await Promise.allSettled([
+        ...(plan.inserts.length ? [createTrainFares(plan.inserts)] : []),
+        ...plan.updates.map(({ fareId, fare }) => updateTrainFare(fareId, { fare })),
+      ])
+      const saved = results.flatMap((result) => result.status === 'fulfilled' && !result.value.error ? result.value.fares ?? [result.value.fare] : [])
+      // Keep successful writes so retrying a partially failed save does not insert them again.
+      setFares((current) => [...current.filter((fare) => !saved.some((item) => item.fare_id === fare.fare_id)), ...saved])
+      if (results.some((result) => result.status === 'rejected' || result.value.error)) setError('Some fares could not be saved. Successful changes were kept; retry to save the remaining changes.')
+      else setSuccess('Fares saved successfully.')
+    } catch { setError('Fares could not be saved. Check your connection and try again.') }
+    finally { setSaving(false) }
+  }
+
+  function renderFareInput(destinationStopId, fareType, values, setter) {
+    const existing = fares.find((fare) => fare.destination_stop_id === destinationStopId && (fare.fare_type ?? 'STANDARD') === fareType)
+    const label = `${lineName} ? ${direction === 'southWest' ? DIRECTIONS.southWest : DIRECTIONS.northEast} ? ${stationLabel(stopMap.get(originStopId))} to ${stationLabel(stopMap.get(destinationStopId))} ? ${fareType}`
+    return <div className="fare-cell">
+      <input className="table-fare-input" type="number" min="0" step="0.01" aria-label={`${fareType} fare to ${stationLabel(stopMap.get(destinationStopId))}`}
+        disabled={saving || deleting || loadingFares} value={values[destinationStopId] ?? ''}
+        onChange={(event) => { setSuccess(''); updateValue(setter, destinationStopId, event.target.value) }} placeholder="Not configured" />
+      {existing && <DeleteButton label={`${label} ? Fare #${existing.fare_id}`} disabled={saving || deleting || loadingFares}
+        onDelete={async () => { setDeleting(true); try { return await deleteTrainFare(existing.fare_id) } finally { setDeleting(false) } }}
+        onDeleted={() => {
+          setFares((current) => current.filter((fare) => fare.fare_id !== existing.fare_id))
+          setter((current) => { const next = { ...current }; delete next[destinationStopId]; return next })
+          setError(''); setSuccess(`${fareType} fare deleted successfully.`)
+        }} />}
+    </div>
   }
 
   const trainFareColumns = [
@@ -188,36 +185,12 @@ function TrainFarePage({ userEmail, onSignOut, onTabChange }) {
     {
       key: 'standard',
       label: 'STANDARD',
-      render: (destinationStopId) => (
-        <input
-          className="table-fare-input"
-          type="number"
-          min="0"
-          step="1"
-          value={standardValues[destinationStopId] ?? ''}
-          onChange={(event) =>
-            updateValue(setStandardValues, destinationStopId, event.target.value)
-          }
-          placeholder="Enter fare"
-        />
-      ),
+      render: (id) => renderFareInput(id, 'STANDARD', standardValues, setStandardValues),
     },
     {
       key: 'discounted',
       label: 'DISCOUNTED',
-      render: (destinationStopId) => (
-        <input
-          className="table-fare-input"
-          type="number"
-          min="0"
-          step="1"
-          value={discountedValues[destinationStopId] ?? ''}
-          onChange={(event) =>
-            updateValue(setDiscountedValues, destinationStopId, event.target.value)
-          }
-          placeholder="Enter fare"
-        />
-      ),
+      render: (id) => renderFareInput(id, 'DISCOUNTED', discountedValues, setDiscountedValues),
     },
   ]
 
@@ -238,6 +211,7 @@ function TrainFarePage({ userEmail, onSignOut, onTabChange }) {
           <select
             id="train-line"
             value={lineName}
+            disabled={saving || deleting || loadingFares}
             onChange={(event) => handleLineChange(event.target.value)}
           >
             <option value="">Select train line</option>
@@ -254,7 +228,7 @@ function TrainFarePage({ userEmail, onSignOut, onTabChange }) {
             id="train-direction"
             value={direction}
             onChange={(event) => handleDirectionChange(event.target.value)}
-            disabled={!line}
+            disabled={!line || saving || deleting || loadingFares}
           >
             <option value="">Select direction</option>
             <option value="northEast">{DIRECTIONS.northEast}</option>
@@ -267,6 +241,7 @@ function TrainFarePage({ userEmail, onSignOut, onTabChange }) {
             id="train-origin"
             value={originStopId}
             onChange={(event) => {
+              if (!canLeaveEditor()) return
               setOriginStopId(event.target.value)
               setFares([])
               setStandardValues({})
@@ -274,7 +249,7 @@ function TrainFarePage({ userEmail, onSignOut, onTabChange }) {
               setRouteLoaded(false)
               setSuccess('')
             }}
-            disabled={!direction || loadingStops}
+            disabled={!direction || loadingStops || saving || deleting || loadingFares}
           >
             <option value="">{loadingStops ? 'Loading stations…' : 'Select origin station'}</option>
             {orderedStopIds.slice(0, -1).map((stopId) => (
@@ -288,7 +263,7 @@ function TrainFarePage({ userEmail, onSignOut, onTabChange }) {
           className="primary-button compact"
           type="button"
           onClick={loadRouteFares}
-          disabled={!originStopId || loadingFares}
+          disabled={!originStopId || loadingFares || saving || deleting}
         >
           {loadingFares ? 'Loading…' : 'Show fares'}
         </button>
@@ -310,17 +285,19 @@ function TrainFarePage({ userEmail, onSignOut, onTabChange }) {
       )}
       {routeLoaded && (
         <DataTable
+          pageSize={0}
           caption={`${lineName} · ${direction === 'southWest' ? DIRECTIONS.southWest : DIRECTIONS.northEast} · Trip ${tripId}`}
           columns={trainFareColumns}
           rows={downstreamStopIds}
           getRowKey={(destinationStopId) => destinationStopId}
           footer={
             <div className="batch-actions">
+              <p className="record-meta">Blank fares are not configured. Use Delete to remove an existing fare.</p>
               <button
                 className="primary-button"
                 type="button"
                 onClick={saveFares}
-                disabled={saving}
+                disabled={saving || deleting || loadingFares}
               >
                 {saving ? 'Saving fares…' : 'Save fares'}
               </button>

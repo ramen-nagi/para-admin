@@ -124,7 +124,6 @@ function OverviewPage({ userEmail, onSignOut, onTabChange }) {
 
   function goToTab(tab) {
     onTabChange(tab)
-    window.location.hash = tab
   }
 
   const data = metrics ?? {
