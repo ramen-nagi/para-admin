@@ -14,7 +14,11 @@ const navItems = [
   ['fares', 'Fare Matrix'],
   ['train-fares', 'Train Fare'],
   ['route-suggestions', 'Route Suggestions'],
-  ['accounts', 'User Management'],
+]
+
+const userTabs = [
+  ['passengers', 'Passengers'],
+  ['staff', 'Staff'],
 ]
 
 function readCollapsed() {
@@ -30,6 +34,9 @@ function AdminLayout({ userEmail, onSignOut, activeTab, onTabChange, children, e
   const [collapsed, setCollapsed] = useState(readCollapsed)
   const [isMobile, setIsMobile] = useState(() => window.matchMedia(mobileQuery).matches)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [usersOpen, setUsersOpen] = useState(() =>
+    ['accounts', ...userTabs.map(([tab]) => tab)].includes(activeTab),
+  )
   const sidebarRef = useRef(null)
   const menuRef = useRef(null)
   const closeRef = useRef(null)
@@ -100,6 +107,20 @@ function AdminLayout({ userEmail, onSignOut, activeTab, onTabChange, children, e
   function navigate(tab) {
     onTabChange?.(tab)
     setMobileOpen(false)
+  }
+
+  function toggleUsers() {
+    if (compact) {
+      setCollapsed(false)
+      setUsersOpen(true)
+      try {
+        window.localStorage.setItem('para-sidebar-collapsed', 'false')
+      } catch {
+        /* Preference persistence is optional. */
+      }
+      return
+    }
+    setUsersOpen((current) => !current)
   }
 
   return (
@@ -176,6 +197,50 @@ function AdminLayout({ userEmail, onSignOut, activeTab, onTabChange, children, e
                 <span className="nav-label">{label}</span>
               </button>
             ))}
+          {canAccessTab(role, 'passengers') && (
+            <div className="nav-group">
+              <button
+                className={`nav-item nav-group-toggle ${userTabs.some(([tab]) => activeTab === tab) ? 'section-active' : ''}`}
+                type="button"
+                aria-label="User Management"
+                aria-expanded={!compact && usersOpen}
+                aria-controls="user-management-navigation"
+                title={compact ? 'User Management' : undefined}
+                onClick={toggleUsers}
+              >
+                <NavigationIcon name="accounts" />
+                <span className="nav-label">User Management</span>
+                <span className={`nav-group-chevron ${usersOpen ? 'open' : ''}`}>
+                  <NavigationIcon name="chevron" />
+                </span>
+              </button>
+              {!compact && usersOpen && (
+                <div
+                  id="user-management-navigation"
+                  className="nav-submenu"
+                  aria-label="User Management"
+                >
+                  {userTabs.map(([tab, label]) => (
+                    <button
+                      key={tab}
+                      className={`nav-item nav-subitem ${activeTab === tab || (activeTab === 'accounts' && tab === 'passengers') ? 'active' : ''}`}
+                      type="button"
+                      aria-label={label}
+                      aria-current={
+                        activeTab === tab || (activeTab === 'accounts' && tab === 'passengers')
+                          ? 'page'
+                          : undefined
+                      }
+                      onClick={() => navigate(tab)}
+                    >
+                      <NavigationIcon name={tab} />
+                      <span className="nav-label">{label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           {canAccessTab(role, 'gtfs') && (
             <a
               className={`nav-item ${activeTab === 'gtfs' ? 'active' : ''}`}
