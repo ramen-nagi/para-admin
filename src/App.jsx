@@ -5,6 +5,7 @@ import AuthLayout from './layouts/AuthLayout'
 import AdminLayout from './layouts/AdminLayout'
 import LoginPage from './features/auth/LoginPage'
 import PasswordPage from './features/auth/PasswordPage'
+import MyAccountPage from './features/auth/MyAccountPage'
 import OverviewPage from './features/overview/OverviewPage'
 import ReportsPage from './features/reports/ReportsPage'
 import FareMatrixPage from './features/fares/FareMatrixPage'
@@ -27,6 +28,7 @@ const pages = {
   'train-fares': TrainFarePage,
   'route-suggestions': RouteSuggestionsPage,
   accounts: AccountsPage,
+  'my-account': MyAccountPage,
 }
 
 function StaffWorkspace({ session, onSignOut }) {

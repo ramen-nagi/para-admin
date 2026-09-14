@@ -4,6 +4,18 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
+const passwordSpecialCharacters = '!@#$%^&*()_+-=[]{};\'\\:"|<>?,./`~'
+
+function validPassword(password) {
+  return (
+    typeof password === 'string' &&
+    password.length >= 8 &&
+    /[A-Za-z]/.test(password) &&
+    /[0-9]/.test(password) &&
+    [...password].some((character) => passwordSpecialCharacters.includes(character)) &&
+    new TextEncoder().encode(password).length <= 72
+  )
+}
 
 function reply(status, body) {
   return new Response(JSON.stringify(body), {
@@ -62,13 +74,9 @@ export function createHandler({ createUserClient, createAdminClient, appUrl }) {
       if (body.action === 'create_user') {
         if (!['passenger', ...roles].includes(body.role))
           return reply(400, { error: 'Choose a valid user role.' })
-        if (
-          typeof body.password !== 'string' ||
-          body.password.length < 12 ||
-          new TextEncoder().encode(body.password).length > 72
-        )
+        if (!validPassword(body.password))
           return reply(400, {
-            error: 'Use a password with at least 12 characters and at most 72 bytes.',
+            error: 'Use 8 to 72 bytes with at least one letter, number, and special character.',
           })
         const adminClient = createAdminClient()
         const { data, error } = await adminClient.auth.admin.createUser({

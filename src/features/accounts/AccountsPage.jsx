@@ -4,6 +4,7 @@ import PageHeader from '../../components/PageHeader'
 import DataTable from '../../components/DataTable'
 import useUnsavedChanges from '../../hooks/useUnsavedChanges'
 import { STAFF_ROLES } from '../auth/permissions'
+import { PASSWORD_REQUIREMENTS, passwordValidationError } from '../auth/passwordPolicy'
 import {
   createManagedUser,
   listManagedUsers,
@@ -102,6 +103,10 @@ export default function AccountsPage({ userId, ...layoutProps }) {
   async function save(event) {
     event.preventDefault()
     if (saving) return
+    if (mode === 'create') {
+      const validationError = passwordValidationError(form.password)
+      if (validationError) return setError(validationError)
+    }
     if (
       mode === 'edit' &&
       selected.role !== 'passenger' &&
@@ -318,13 +323,13 @@ export default function AccountsPage({ userId, ...layoutProps }) {
                     type="password"
                     autoComplete="new-password"
                     required
-                    minLength={12}
+                    minLength={8}
                     maxLength={72}
                     disabled={saving}
                     value={form.password}
                     onChange={(event) => setForm({ ...form, password: event.target.value })}
                   />
-                  <small>At least 12 characters.</small>
+                  <small>{PASSWORD_REQUIREMENTS}</small>
                 </div>
               )}
               <div className="field-group">

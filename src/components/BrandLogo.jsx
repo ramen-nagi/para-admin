@@ -6,7 +6,7 @@ export default function BrandLogo({ compact = false }) {
       <img className="para-logo-mark" src={paraLogo} width="40" height="40" alt="PARA" />
       {!compact && (
         <span className="para-logo-wordmark" aria-hidden="true">
-          PARA<span>ADMIN</span>
+          PARA<span>WEBTOOL</span>
         </span>
       )}
     </span>

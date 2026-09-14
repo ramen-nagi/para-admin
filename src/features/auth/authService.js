@@ -36,3 +36,7 @@ export async function signIn(email, password) {
 export async function signOut() {
   return supabase.auth.signOut()
 }
+
+export async function changePassword(currentPassword, password) {
+  return supabase.auth.updateUser({ current_password: currentPassword, password })
+}

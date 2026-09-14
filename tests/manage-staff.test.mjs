@@ -46,6 +46,16 @@ test('creating staff assigns the role through the guarded caller RPC', async () 
     })
   }
 })
+test('creating an account accepts an eight-character complex password', async () => {
+  const f = fixture({ appUrl: '' })
+  const response = await f.send({
+    action: 'create_user',
+    email: 'new@example.com',
+    password: 'Para123!',
+    role: 'passenger',
+  })
+  assert.equal(response.status, 200)
+})
 test('non-admins cannot create any account', async () => {
   for (const role of ['editor', 'operator', '']) {
     const f = fixture({ role })
@@ -70,6 +80,9 @@ test('invalid create roles and passwords cannot create accounts', async () => {
   for (const changes of [
     { role: 'owner' },
     { password: 'short' },
+    { password: 'abcdefgh!' },
+    { password: '12345678!' },
+    { password: 'Abcdefg1' },
     { password: 'é'.repeat(40) },
     { password: null },
   ]) {

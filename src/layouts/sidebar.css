@@ -118,6 +118,9 @@
 .sidebar-user-details .user-email {
   margin: 0 0 14px;
 }
+.sidebar .account-nav-item {
+  margin-bottom: 8px;
+}
 .sidebar .sign-out-button {
   display: flex;
   align-items: center;

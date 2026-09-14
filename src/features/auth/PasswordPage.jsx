@@ -2,6 +2,7 @@ import { useState } from 'react'
 import AuthLayout from '../../layouts/AuthLayout'
 import { supabase } from '../../lib/supabase'
 import useUnsavedChanges from '../../hooks/useUnsavedChanges'
+import { PASSWORD_REQUIREMENTS, passwordValidationError } from './passwordPolicy'
 
 export default function PasswordPage({ session, onDone, onSignOut, authError }) {
   const [password, setPassword] = useState('')
@@ -14,10 +15,8 @@ export default function PasswordPage({ session, onDone, onSignOut, authError }) 
   async function submit(event) {
     event.preventDefault()
     setError('')
-    if (password.length < 12) {
-      setError('Use at least 12 characters.')
-      return
-    }
+    const validationError = passwordValidationError(password)
+    if (validationError) return setError(validationError)
     if (password !== confirmation) {
       setError('The passwords do not match.')
       return
@@ -76,7 +75,8 @@ export default function PasswordPage({ session, onDone, onSignOut, authError }) 
                   id="new-password"
                   type="password"
                   autoComplete="new-password"
-                  minLength={12}
+                  minLength={8}
+                  maxLength={72}
                   required
                   disabled={saving}
                   value={password}
@@ -95,7 +95,7 @@ export default function PasswordPage({ session, onDone, onSignOut, authError }) 
                   onChange={(event) => setConfirmation(event.target.value)}
                 />
               </div>
-              <p>Use at least 12 characters.</p>
+              <p>{PASSWORD_REQUIREMENTS}</p>
               {error && (
                 <p className="error-message" role="alert">
                   {error}

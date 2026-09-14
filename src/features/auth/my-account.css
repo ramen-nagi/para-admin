@@ -1,0 +1,184 @@
+.my-account-grid {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.75fr) minmax(320px, 1.25fr);
+  gap: 20px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+.my-account-card {
+  padding: 24px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.04);
+}
+.my-account-card h2 {
+  margin: 0 0 20px;
+  color: #111827;
+  font-size: 20px;
+}
+.my-account-card dl,
+.my-account-card dd {
+  margin: 0;
+}
+.my-account-card dl > div + div {
+  margin-top: 20px;
+}
+.my-account-card dt {
+  margin-bottom: 6px;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 600;
+}
+.my-account-card dd {
+  overflow-wrap: anywhere;
+  color: #111827;
+  font-weight: 600;
+}
+.my-account-help {
+  margin: -8px 0 22px;
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.password-input-wrap {
+  position: relative;
+}
+
+.password-input-wrap input {
+  padding-right: 48px;
+}
+
+.password-visibility-button {
+  position: absolute;
+  top: 50%;
+  right: 7px;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  transform: translateY(-50%);
+  place-items: center;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.password-visibility-button:hover {
+  background: #eef2f7;
+  color: #111827;
+}
+
+.password-visibility-button:focus-visible {
+  outline: 2px solid #4b5563;
+  outline-offset: 1px;
+}
+
+.password-visibility-button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.password-visibility-button svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.password-requirements {
+  margin: -4px 0 20px;
+  padding: 14px 16px;
+  border: 1px solid #dbe2ea;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.password-requirements-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #334155;
+  font-size: 13px;
+}
+
+.password-requirements-heading span {
+  color: #64748b;
+  font-weight: 700;
+}
+
+.requirement-progress {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+  margin: 10px 0 12px;
+}
+
+.requirement-progress span {
+  height: 4px;
+  border-radius: 999px;
+  background: #dbe2ea;
+  transition: background 160ms ease;
+}
+
+.requirement-progress span.met {
+  background: #238636;
+}
+
+.password-requirements ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.password-requirements li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.password-requirements li.met {
+  color: #216e39;
+  font-weight: 600;
+}
+
+.password-match {
+  margin: -8px 0 18px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.password-match.matched {
+  color: #216e39;
+}
+
+.password-match.unmatched {
+  color: #9a6700;
+}
+@media (max-width: 720px) {
+  .my-account-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .password-requirements ul {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .requirement-progress span {
+    transition: none;
+  }
+}

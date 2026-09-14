@@ -207,6 +207,17 @@ function AdminLayout({ userEmail, onSignOut, activeTab, onTabChange, children, e
             </span>
           </div>
           <button
+            className={`nav-item account-nav-item ${activeTab === 'my-account' ? 'active' : ''}`}
+            type="button"
+            aria-label="My Account"
+            aria-current={activeTab === 'my-account' ? 'page' : undefined}
+            title={compact ? 'My Account' : undefined}
+            onClick={() => navigate('my-account')}
+          >
+            <NavigationIcon name="my-account" />
+            <span className="nav-label">My Account</span>
+          </button>
+          <button
             className="sign-out-button"
             type="button"
             aria-label="Sign out"
