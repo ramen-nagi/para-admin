@@ -4,6 +4,7 @@ import PageHeader from '../../components/PageHeader'
 import DataTable from '../../components/DataTable'
 import useUnsavedChanges from '../../hooks/useUnsavedChanges'
 import { STAFF_ROLES } from '../auth/permissions'
+import { PASSWORD_REQUIREMENTS, passwordValidationError } from '../auth/passwordPolicy'
 import {
   createManagedUser,
   listManagedUsers,
@@ -21,11 +22,13 @@ const statusLabels = {
 }
 const dateLabel = (value) => (value ? new Date(value).toLocaleString() : 'Never')
 
-export default function AccountsPage({ userId, ...layoutProps }) {
+export default function AccountsPage({ userId, accountKind = 'passenger', ...layoutProps }) {
+  const isStaffView = accountKind === 'staff'
+  const defaultRole = isStaffView ? 'operator' : 'passenger'
   const [directory, setDirectory] = useState({ users: [], total: 0 })
   const [query, setQuery] = useState({
     search: '',
-    kind: 'all',
+    kind: accountKind,
     status: 'all',
     page: 0,
     revision: 0,
@@ -45,7 +48,7 @@ export default function AccountsPage({ userId, ...layoutProps }) {
         role: selected.role,
         staffActive: selected.staff_active ?? true,
       }
-    : { ...emptyForm, role: mode === 'invite' ? 'operator' : 'passenger' }
+    : { ...emptyForm, role: mode === 'invite' ? 'operator' : defaultRole }
   const dirty = mode !== null && JSON.stringify(form) !== JSON.stringify(original)
   useUnsavedChanges(dirty, saving)
 
@@ -93,7 +96,7 @@ export default function AccountsPage({ userId, ...layoutProps }) {
             role: account.role,
             staffActive: account.staff_active ?? true,
           }
-        : { ...emptyForm, role: nextMode === 'invite' ? 'operator' : 'passenger' },
+        : { ...emptyForm, role: nextMode === 'invite' ? 'operator' : defaultRole },
     )
     setError('')
     setNotice('')
@@ -102,6 +105,10 @@ export default function AccountsPage({ userId, ...layoutProps }) {
   async function save(event) {
     event.preventDefault()
     if (saving) return
+    if (mode === 'create') {
+      const validationError = passwordValidationError(form.password)
+      if (validationError) return setError(validationError)
+    }
     if (
       mode === 'edit' &&
       selected.role !== 'passenger' &&
@@ -196,7 +203,7 @@ export default function AccountsPage({ userId, ...layoutProps }) {
         </div>
       ),
     },
-    { key: 'role', label: 'Role', className: 'staff-role' },
+    ...(isStaffView ? [{ key: 'role', label: 'Role', className: 'staff-role' }] : []),
     {
       key: 'status',
       label: 'Status',
@@ -212,58 +219,66 @@ export default function AccountsPage({ userId, ...layoutProps }) {
       label: 'Last sign-in',
       render: (account) => dateLabel(account.last_sign_in_at),
     },
-    {
-      key: 'actions',
-      label: 'Actions',
-      render: (account) => (
-        <div className="account-row-actions">
-          <button
-            className="secondary-button compact"
-            type="button"
-            disabled={saving || account.user_id === userId}
-            aria-label={'Manage access for ' + (account.email || account.user_id)}
-            onClick={() => openForm('edit', account)}
-          >
-            Manage access
-          </button>
-          {account.role !== 'passenger' && account.email && (
-            <button
-              className="secondary-button compact"
-              type="button"
-              disabled={saving || account.status === 'suspended' || account.staff_active === false}
-              onClick={() => emailAccount(account)}
-            >
-              {account.email_confirmed_at ? 'Reset password' : 'Resend invitation'}
-            </button>
-          )}
-        </div>
-      ),
-    },
+    ...(isStaffView
+      ? [
+          {
+            key: 'actions',
+            label: 'Actions',
+            render: (account) => (
+              <div className="account-row-actions">
+                <button
+                  className="secondary-button compact"
+                  type="button"
+                  disabled={saving || account.user_id === userId}
+                  aria-label={'Manage access for ' + (account.email || account.user_id)}
+                  onClick={() => openForm('edit', account)}
+                >
+                  Manage access
+                </button>
+                {account.email && (
+                  <button
+                    className="secondary-button compact"
+                    type="button"
+                    disabled={
+                      saving || account.status === 'suspended' || account.staff_active === false
+                    }
+                    onClick={() => emailAccount(account)}
+                  >
+                    {account.email_confirmed_at ? 'Send reset link' : 'Resend invitation'}
+                  </button>
+                )}
+              </div>
+            ),
+          },
+        ]
+      : []),
   ]
 
   return (
-    <AdminLayout {...layoutProps} activeTab="accounts">
-      <PageHeader title="User Management" subtitle="Manage passenger accounts and your staff team.">
-        <button
-          className="primary-button compact"
-          type="button"
-          disabled={saving}
-          onClick={() => openForm('create')}
-        >
-          Create user
-        </button>
-        <button
-          className="secondary-button compact"
-          type="button"
-          disabled={saving}
-          onClick={() => openForm('invite')}
-        >
-          Invite staff
-        </button>
+    <AdminLayout {...layoutProps} activeTab={accountKind}>
+      <PageHeader
+        title={isStaffView ? 'Staff Management' : 'Passenger Management'}
+        subtitle={
+          isStaffView
+            ? 'Manage staff roles and access to PARA Admin.'
+            : 'Manage accounts used in the passenger app.'
+        }
+      >
+        {isStaffView && (
+          <button
+            className="primary-button compact"
+            type="button"
+            disabled={saving}
+            onClick={() => openForm('invite')}
+          >
+            Invite staff
+          </button>
+        )}
       </PageHeader>
       <p className="user-management-help">
-        Passengers use the passenger app. Staff roles control access to PARA Admin and the GTFS
-        editor.
+        {isStaffView
+          ? 'Staff roles control access to PARA Admin and the GTFS editor.'
+          : ''}
       </p>
       {error && (
         <p className="error-message" role="alert">
@@ -279,7 +294,9 @@ export default function AccountsPage({ userId, ...layoutProps }) {
         <section className="account-access-form" aria-labelledby="user-form-title">
           <h2 id="user-form-title">
             {mode === 'create'
-              ? 'Create a user'
+              ? isStaffView
+                ? 'Create staff account'
+                : 'Create passenger account'
               : mode === 'invite'
                 ? 'Invite staff'
                 : 'Manage user access'}
@@ -318,35 +335,37 @@ export default function AccountsPage({ userId, ...layoutProps }) {
                     type="password"
                     autoComplete="new-password"
                     required
-                    minLength={12}
+                    minLength={8}
                     maxLength={72}
                     disabled={saving}
                     value={form.password}
                     onChange={(event) => setForm({ ...form, password: event.target.value })}
                   />
-                  <small>At least 12 characters.</small>
+                  <small>{PASSWORD_REQUIREMENTS}</small>
                 </div>
               )}
-              <div className="field-group">
-                <label htmlFor="user-role">Role</label>
-                <select
-                  id="user-role"
-                  value={form.role}
-                  disabled={saving}
-                  onChange={(event) => setForm({ ...form, role: event.target.value })}
-                >
-                  {mode !== 'invite' && <option value="passenger">Passenger</option>}
-                  {STAFF_ROLES.map((role) => (
-                    <option
-                      key={role}
-                      value={role}
-                      disabled={mode === 'edit' && (selected.is_anonymous || !selected.email)}
-                    >
-                      {role[0].toUpperCase() + role.slice(1)}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {isStaffView && (
+                <div className="field-group">
+                  <label htmlFor="user-role">Role</label>
+                  <select
+                    id="user-role"
+                    value={form.role}
+                    disabled={saving}
+                    onChange={(event) => setForm({ ...form, role: event.target.value })}
+                  >
+                    {mode === 'edit' && <option value="passenger">Passenger</option>}
+                    {STAFF_ROLES.map((role) => (
+                      <option
+                        key={role}
+                        value={role}
+                        disabled={mode === 'edit' && (selected.is_anonymous || !selected.email)}
+                      >
+                        {role[0].toUpperCase() + role.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               {mode === 'edit' && form.role !== 'passenger' && (
                 <div className="field-group">
                   <label htmlFor="staff-active">Staff access</label>
@@ -378,7 +397,9 @@ export default function AccountsPage({ userId, ...layoutProps }) {
                 {saving
                   ? 'Saving...'
                   : mode === 'create'
-                    ? 'Create user'
+                    ? isStaffView
+                      ? 'Create staff'
+                      : 'Create passenger'
                     : mode === 'invite'
                       ? 'Send invitation'
                       : 'Save access'}
@@ -415,21 +436,21 @@ export default function AccountsPage({ userId, ...layoutProps }) {
         <button className="secondary-button compact" disabled={saving}>
           Search
         </button>
-        <select
-          aria-label="Filter by user role"
-          value={query.kind}
-          disabled={saving}
-          onChange={(event) => refresh({ kind: event.target.value, page: 0 })}
-        >
-          <option value="all">All users</option>
-          <option value="passenger">Passengers</option>
-          <option value="staff">All staff</option>
-          {STAFF_ROLES.map((role) => (
-            <option key={role} value={role}>
-              {role[0].toUpperCase() + role.slice(1)}
-            </option>
-          ))}
-        </select>
+        {isStaffView && (
+          <select
+            aria-label="Filter by staff role"
+            value={query.kind}
+            disabled={saving}
+            onChange={(event) => refresh({ kind: event.target.value, page: 0 })}
+          >
+            <option value="staff">All staff</option>
+            {STAFF_ROLES.map((role) => (
+              <option key={role} value={role}>
+                {role[0].toUpperCase() + role.slice(1)}
+              </option>
+            ))}
+          </select>
+        )}
         <select
           aria-label="Filter by account status"
           value={query.status}

@@ -5,6 +5,7 @@ import AuthLayout from './layouts/AuthLayout'
 import AdminLayout from './layouts/AdminLayout'
 import LoginPage from './features/auth/LoginPage'
 import PasswordPage from './features/auth/PasswordPage'
+import MyAccountPage from './features/auth/MyAccountPage'
 import OverviewPage from './features/overview/OverviewPage'
 import ReportsPage from './features/reports/ReportsPage'
 import FareMatrixPage from './features/fares/FareMatrixPage'
@@ -26,7 +27,18 @@ const pages = {
   fares: FareMatrixPage,
   'train-fares': TrainFarePage,
   'route-suggestions': RouteSuggestionsPage,
-  accounts: AccountsPage,
+  accounts: PassengerAccountsPage,
+  passengers: PassengerAccountsPage,
+  staff: StaffAccountsPage,
+  'my-account': MyAccountPage,
+}
+
+function PassengerAccountsPage(props) {
+  return <AccountsPage {...props} accountKind="passenger" />
+}
+
+function StaffAccountsPage(props) {
+  return <AccountsPage {...props} accountKind="staff" />
 }
 
 function StaffWorkspace({ session, onSignOut }) {
@@ -223,7 +235,13 @@ function App() {
       {session ? (
         <StaffWorkspace key={session.user.id} session={session} onSignOut={handleSignOut} />
       ) : (
-        <LoginPage onSignedIn={setSession} />
+        <LoginPage
+          onSignedIn={setSession}
+          onPasswordRecovery={(recoverySession) => {
+            setSession(recoverySession)
+            setPasswordFlow(true)
+          }}
+        />
       )}
     </>
   )

@@ -100,6 +100,40 @@
 .sidebar .nav-item.active {
   box-shadow: inset 3px 0 0 #60a5fa;
 }
+.sidebar .nav-group {
+  display: grid;
+  gap: 6px;
+}
+.sidebar .nav-group-toggle.section-active {
+  color: #fff;
+}
+.sidebar .nav-group-chevron {
+  display: inline-flex;
+  margin-left: auto;
+  transition: transform 160ms ease;
+}
+.sidebar .nav-group-chevron > svg {
+  width: 16px;
+  height: 16px;
+}
+.sidebar .nav-group-chevron.open {
+  transform: rotate(180deg);
+}
+.sidebar .nav-submenu {
+  display: grid;
+  gap: 5px;
+  padding-left: 20px;
+}
+.sidebar .nav-subitem {
+  min-height: 40px;
+  padding-block: 9px;
+  background: #182233;
+  font-size: 13px;
+}
+.sidebar .nav-subitem > svg {
+  width: 18px;
+  height: 18px;
+}
 .sidebar .vehicle-legend {
   margin: 24px 10px;
 }
@@ -117,6 +151,9 @@
 }
 .sidebar-user-details .user-email {
   margin: 0 0 14px;
+}
+.sidebar .account-nav-item {
+  margin-bottom: 8px;
 }
 .sidebar .sign-out-button {
   display: flex;
@@ -136,6 +173,8 @@
   padding: 12px;
 }
 .sidebar-is-collapsed .nav-label,
+.sidebar-is-collapsed .nav-group-chevron,
+.sidebar-is-collapsed .nav-submenu,
 .sidebar-is-collapsed .vehicle-legend,
 .sidebar-is-collapsed .sidebar-user-details {
   display: none;
@@ -232,7 +271,8 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .admin-shell,
-  .admin-shell > .sidebar {
+  .admin-shell > .sidebar,
+  .sidebar .nav-group-chevron {
     transition: none;
   }
 }

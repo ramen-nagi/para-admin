@@ -4,6 +4,18 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
+const passwordSpecialCharacters = '!@#$%^&*()_+-=[]{};\'\\:"|<>?,./`~'
+
+function validPassword(password) {
+  return (
+    typeof password === 'string' &&
+    password.length >= 8 &&
+    /[A-Za-z]/.test(password) &&
+    /[0-9]/.test(password) &&
+    [...password].some((character) => passwordSpecialCharacters.includes(character)) &&
+    new TextEncoder().encode(password).length <= 72
+  )
+}
 
 function reply(status, body) {
   return new Response(JSON.stringify(body), {
@@ -60,15 +72,11 @@ export function createHandler({ createUserClient, createAdminClient, appUrl }) {
       if (body.action === 'invite' && !roles.includes(body.role))
         return reply(400, { error: 'Choose a valid staff role.' })
       if (body.action === 'create_user') {
-        if (!['passenger', ...roles].includes(body.role))
-          return reply(400, { error: 'Choose a valid user role.' })
-        if (
-          typeof body.password !== 'string' ||
-          body.password.length < 12 ||
-          new TextEncoder().encode(body.password).length > 72
-        )
+        if (body.role !== 'passenger')
+          return reply(400, { error: 'Staff accounts must be created with an invitation.' })
+        if (!validPassword(body.password))
           return reply(400, {
-            error: 'Use a password with at least 12 characters and at most 72 bytes.',
+            error: 'Use 8 to 72 bytes with at least one letter, number, and special character.',
           })
         const adminClient = createAdminClient()
         const { data, error } = await adminClient.auth.admin.createUser({
@@ -95,24 +103,9 @@ export function createHandler({ createUserClient, createAdminClient, appUrl }) {
           return reply(502, {
             error: 'No account was returned. Refresh the directory before retrying.',
           })
-        if (body.role !== 'passenger') {
-          const { error: accessError } = await userClient.rpc('set_managed_user_access', {
-            p_user_id: data.user.id,
-            p_role: body.role,
-            p_is_active: true,
-          })
-          if (accessError)
-            return reply(200, {
-              warning:
-                'Account created as a passenger, but staff access could not be assigned. Find the account in the directory and edit its access.',
-              userId: data.user.id,
-              accessAssigned: false,
-            })
-        }
         return reply(200, {
           message: 'Account created. No email was sent.',
           userId: data.user.id,
-          accessAssigned: true,
         })
       }
       if (!appUrl)

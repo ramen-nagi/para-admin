@@ -25,7 +25,7 @@ test('creating a passenger needs no email configuration and grants no staff acce
     false,
   )
 })
-test('creating staff assigns the role through the guarded caller RPC', async () => {
+test('staff accounts must use the invitation flow', async () => {
   for (const role of ['admin', 'editor', 'operator']) {
     const f = fixture({ appUrl: '' })
     assert.equal(
@@ -37,14 +37,23 @@ test('creating staff assigns the role through the guarded caller RPC', async () 
           role,
         })
       ).status,
-      200,
+      400,
     )
-    assert.deepEqual(f.calls.find((call) => call.name === 'set_managed_user_access').args, {
-      p_user_id: 'created-user-id',
-      p_role: role,
-      p_is_active: true,
-    })
+    assert.equal(
+      f.calls.some((call) => call.name === 'service-client'),
+      false,
+    )
   }
+})
+test('creating an account accepts an eight-character complex password', async () => {
+  const f = fixture({ appUrl: '' })
+  const response = await f.send({
+    action: 'create_user',
+    email: 'new@example.com',
+    password: 'Para123!',
+    role: 'passenger',
+  })
+  assert.equal(response.status, 200)
 })
 test('non-admins cannot create any account', async () => {
   for (const role of ['editor', 'operator', '']) {
@@ -70,6 +79,9 @@ test('invalid create roles and passwords cannot create accounts', async () => {
   for (const changes of [
     { role: 'owner' },
     { password: 'short' },
+    { password: 'abcdefgh!' },
+    { password: '12345678!' },
+    { password: 'Abcdefg1' },
     { password: 'é'.repeat(40) },
     { password: null },
   ]) {
@@ -96,7 +108,7 @@ test('duplicate create does not reset a password or assign a role', async () => 
         action: 'create_user',
         email: 'new@example.com',
         password: 'Test-only-password-123',
-        role: 'admin',
+        role: 'passenger',
       })
     ).status,
     409,
@@ -106,21 +118,6 @@ test('duplicate create does not reset a password or assign a role', async () => 
     false,
   )
 })
-test('role assignment failure leaves a created passenger and reports partial success', async () => {
-  const f = fixture({ accessError: { code: '42501' } })
-  const body = await (
-    await f.send({
-      action: 'create_user',
-      email: 'new@example.com',
-      password: 'Test-only-password-123',
-      role: 'admin',
-    })
-  ).json()
-  assert.equal(body.accessAssigned, false)
-  assert.match(body.warning, /Account created as a passenger/)
-  assert.equal(JSON.stringify(body).includes('Test-only-password-123'), false)
-})
-
 const account = {
   user_id: 'staff-id',
   email: 'staff@example.com',

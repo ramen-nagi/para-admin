@@ -36,3 +36,19 @@ export async function signIn(email, password) {
 export async function signOut() {
   return supabase.auth.signOut()
 }
+
+export async function changePassword(currentPassword, password) {
+  return supabase.auth.updateUser({ current_password: currentPassword, password })
+}
+
+export async function requestPasswordReset(email) {
+  const redirect = new URL(window.location.href)
+  redirect.search = ''
+  redirect.hash = ''
+  redirect.searchParams.set('account', 'password')
+  return supabase.auth.resetPasswordForEmail(email, { redirectTo: redirect.href })
+}
+
+export async function verifyPasswordResetOtp(email, token) {
+  return supabase.auth.verifyOtp({ email, token, type: 'recovery' })
+}

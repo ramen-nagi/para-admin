@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import AuthLayout from '../../layouts/AuthLayout'
+import PasswordInput from '../../components/PasswordInput'
 import { supabase } from '../../lib/supabase'
 import useUnsavedChanges from '../../hooks/useUnsavedChanges'
+import { PASSWORD_REQUIREMENTS, passwordValidationError } from './passwordPolicy'
 
 export default function PasswordPage({ session, onDone, onSignOut, authError }) {
   const [password, setPassword] = useState('')
@@ -14,10 +16,8 @@ export default function PasswordPage({ session, onDone, onSignOut, authError }) 
   async function submit(event) {
     event.preventDefault()
     setError('')
-    if (password.length < 12) {
-      setError('Use at least 12 characters.')
-      return
-    }
+    const validationError = passwordValidationError(password)
+    if (validationError) return setError(validationError)
     if (password !== confirmation) {
       setError('The passwords do not match.')
       return
@@ -70,32 +70,27 @@ export default function PasswordPage({ session, onDone, onSignOut, authError }) 
           <>
             <p>Choose a password for {session.user.email}.</p>
             <form onSubmit={submit}>
-              <div className="field-group">
-                <label htmlFor="new-password">New password</label>
-                <input
-                  id="new-password"
-                  type="password"
-                  autoComplete="new-password"
-                  minLength={12}
-                  required
-                  disabled={saving}
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                />
-              </div>
-              <div className="field-group">
-                <label htmlFor="confirm-password">Confirm new password</label>
-                <input
-                  id="confirm-password"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  disabled={saving}
-                  value={confirmation}
-                  onChange={(event) => setConfirmation(event.target.value)}
-                />
-              </div>
-              <p>Use at least 12 characters.</p>
+              <PasswordInput
+                id="new-password"
+                label="New password"
+                autoComplete="new-password"
+                minLength={8}
+                maxLength={72}
+                required
+                disabled={saving}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+              />
+              <PasswordInput
+                id="confirm-password"
+                label="Confirm new password"
+                autoComplete="new-password"
+                required
+                disabled={saving}
+                value={confirmation}
+                onChange={(event) => setConfirmation(event.target.value)}
+              />
+              <p>{PASSWORD_REQUIREMENTS}</p>
               {error && (
                 <p className="error-message" role="alert">
                   {error}
