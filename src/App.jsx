@@ -225,7 +225,13 @@ function App() {
       {session ? (
         <StaffWorkspace key={session.user.id} session={session} onSignOut={handleSignOut} />
       ) : (
-        <LoginPage onSignedIn={setSession} />
+        <LoginPage
+          onSignedIn={setSession}
+          onPasswordRecovery={(recoverySession) => {
+            setSession(recoverySession)
+            setPasswordFlow(true)
+          }}
+        />
       )}
     </>
   )

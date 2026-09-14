@@ -1,3 +1,19 @@
+@font-face {
+  font-family: 'Para Cubao';
+  src: url('./assets/Fonts/CubaoFree2-Condensed.ttf') format('truetype');
+  font-display: swap;
+  font-style: normal;
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'Para Quiapo';
+  src: url('./assets/Fonts/Quiapo_Free.ttf') format('truetype');
+  font-display: swap;
+  font-style: normal;
+  font-weight: 400;
+}
+
 :root {
   font-family:
     Inter,
